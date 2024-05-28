@@ -2,10 +2,16 @@
 
 Shiro漏洞利用工具
 
+## Environment
+
+`JDK 8` | `Intellij 2024`
+
+> ⚠️ _使用其他JDK版本可能出现未知的错误_
+
 ## TODO
 
 - 爆破key及加密方式(已完成)
-- 漏洞探测
+- 漏洞探测(已完成Shiro550 URLDNS利用链)
 - 探测回显链
 - 漏洞利用
 - 内存马
@@ -37,4 +43,8 @@ usage: java ShiroEXP.jar [-e <arg>] [-h] [-k <arg>] [-rf <arg>] [-s] [-sk]
 
 **爆破key及加密方式**
 
-![brutekey.png](./img/brutekey.png)
+![brutekey.png](img/brutekey.png)
+
+**漏洞验证**
+
+![Shiro550scan.png](img/Shiro550scan.png)
