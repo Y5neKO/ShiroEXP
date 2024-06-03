@@ -1,7 +1,5 @@
 package com.y5neko.shiroexp.misc;
 
-import com.y5neko.shiroexp.payloads.BruteKey;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -9,10 +7,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
@@ -20,6 +15,11 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+//import org.apache.tika.parser.txt.CharsetDetector;
+
+
 
 public class Tools {
     public static final String BLACK = "\033[30m";
@@ -82,6 +82,11 @@ public class Tools {
      * @return 字符串
      */
     public static String bytesToString(byte[] bytes){
+//        CharsetDetector charsetDetector = new CharsetDetector();
+//        charsetDetector.setText(byteArray);
+//
+//        CharsetMatch match = charsetDetector.detect();
+//        String encoding = match.getName();
         return new String(bytes);
     }
 
@@ -225,5 +230,63 @@ public class Tools {
         }
 
         return builder.toString();
+    }
+
+    /**
+     * 读取文件为字节数组
+     * @param filePath 读取文件路径
+     * @return 文件的字节数组
+     */
+    public static byte[] fileToBytes(String filePath) {
+        File file1 = new File(filePath);
+        try {
+            byte[] bytes = Files.readAllBytes(file1.toPath());
+            return bytes;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * 从输入字符串中提取包含在$$$和$$$中的子字符串。
+     * @param input 输入字符串
+     * @return 包含在$$$和$$$中的子字符串列表
+     */
+    public static String extractStrings(String input) {
+        List<String> results = new ArrayList<>();
+        // 定义正则表达式模式
+        String regex = "\\$\\$\\$(.*?)\\$\\$\\$";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(input);
+
+        // 查找并提取匹配的子字符串
+        while (matcher.find()) {
+            results.add(matcher.group(1));
+        }
+
+        return results.get(0);
+    }
+
+    public static void addHeader(Map<String, String> headers, String key, String value) {
+        headers.put(key, value);
+    }
+
+    public static void main(String[] args) {
+        byte[] test = fileToBytes("C:\\Tools\\BlueTeamTools0.92\\outputShiroBytes_sum.ser");
+//        System.out.println(bytesToString(test));
+        Object o;
+
+        try (FileInputStream fileIn = new FileInputStream("C:\\Tools\\BlueTeamTools0.92\\outputShiroBytes_sum.ser");
+             ObjectInputStream in = new ObjectInputStream(fileIn)) {
+
+            Object person = in.readObject();
+            System.out.println("Deserialized Person:");
+            System.out.println(person);
+
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
     }
 }

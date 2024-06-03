@@ -18,7 +18,7 @@ public class BruteKey {
      * @param url 目标地址
      * @return 正确的key
      */
-    public static KeyInfo bruteKey(String url) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
+    public static KeyInfo bruteKey(TargetOBJ url) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         return bruteKey(url, "rememberMe");
     }
 
@@ -28,7 +28,7 @@ public class BruteKey {
      * @param rememberMeString 自定义rememberMe字段名
      * @return 正确的key
      */
-    public static KeyInfo bruteKey(String url, String rememberMeString) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
+    public static KeyInfo bruteKey(TargetOBJ url, String rememberMeString) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         String key;
         String checkData = "rO0ABXNyADJvcmcuYXBhY2hlLnNoaXJvLnN1YmplY3QuU2ltcGxlUHJpbmNpcGFsQ29sbGVjdGlvbqh/WCXGowhKAwABTAAPcmVhbG1QcmluY2lwYWxzdAAPTGphdmEvdXRpbC9NYXA7eHBwdwEAeA==";
         String[] keys = Tools.multiLoadFile("./misc/keys.txt");
@@ -75,7 +75,7 @@ public class BruteKey {
     }
 
     public static void main(String[] args) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
-        KeyInfo key = bruteKey("http://127.0.0.1:8080/login");
+        KeyInfo key = bruteKey(new TargetOBJ("http://127.0.0.1:8080/login"));
         System.out.println(key);
     }
 }
