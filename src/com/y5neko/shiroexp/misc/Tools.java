@@ -1,5 +1,8 @@
 package com.y5neko.shiroexp.misc;
 
+import org.apache.tika.parser.txt.CharsetDetector;
+import org.apache.tika.parser.txt.CharsetMatch;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -8,6 +11,7 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
@@ -17,8 +21,6 @@ import java.security.SecureRandom;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-//import org.apache.tika.parser.txt.CharsetDetector;
-
 
 
 public class Tools {
@@ -81,12 +83,25 @@ public class Tools {
      * @param bytes 字节码
      * @return 字符串
      */
+    public static String bytesToStringEncoding(byte[] bytes){
+        CharsetDetector charsetDetector = new CharsetDetector();
+        charsetDetector.setText(bytes);
+
+        CharsetMatch match = charsetDetector.detect();
+        String encoding = match.getName();
+        try{
+            return new String(bytes, encoding);
+        }catch (Exception e){
+            return new String(bytes);
+        }
+    }
+
+    /**
+     * 字节码转字符串
+     * @param bytes 字节码
+     * @return 字符串
+     */
     public static String bytesToString(byte[] bytes){
-//        CharsetDetector charsetDetector = new CharsetDetector();
-//        charsetDetector.setText(byteArray);
-//
-//        CharsetMatch match = charsetDetector.detect();
-//        String encoding = match.getName();
         return new String(bytes);
     }
 

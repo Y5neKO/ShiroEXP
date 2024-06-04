@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="apache.tomcat.catalina" type="repository">
+    <properties include-transitive-deps="false" maven-id="org.apache.tomcat:tomcat-catalina:8.5.79" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/tomcat-catalina-8.5.79.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

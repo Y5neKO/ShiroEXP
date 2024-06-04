@@ -74,4 +74,8 @@ public class TargetOBJ {
     public void setKey(String key) {
         this.key = key;
     }
+
+    public void resetHeaders(){
+        this.headers = new HashMap<>();
+    }
 }

