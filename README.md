@@ -28,19 +28,23 @@ C:\Tools\Red_Tools\ShiroEXP>java -jar ShiroEXP.jar -h
                                                        v1.0 by Y5neKO :)
                                                        GitHub: https://github.com/Y5neKO
 
-usage: java ShiroEXP.jar [-be] [-bk] [-c <arg>] [--cookie <arg>] [-e
-       <arg>] [--gadget <arg>] [-h] [-k <arg>] [-rf <arg>] [-s] [--shell]
+usage: java ShiroEXP.jar [-be] [-bk] [-c <arg>] [--cookie <arg>] [--gadget
+       <arg>] [--gadget-echo <arg>] [-h] [-k <arg>] [--mem-pass <arg>]
+       [--mem-path <arg>] [--mem-type <arg>] [-rf <arg>] [-s] [--shell]
        [-u <arg>]
- -be,--brute-echo              漏洞扫描模块 | 爆破回显链
- -bk,--brute-key               key爆破模块 | 爆破key
+ -be,--brute-echo              爆破回显链
+ -bk,--brute-key               爆破key
  -c,--cmd <arg>                执行命令
     --cookie <arg>             携带Cookie
- -e,--exp <arg>                指定exp {Shiro550, Shiro721}
     --gadget <arg>             指定利用链
+    --gadget-echo <arg>        指定回显链
  -h,--help                     打印帮助
- -k,--key <arg>                漏洞扫描模块 | 指定key
+ -k,--key <arg>                指定key
+    --mem-pass <arg>           内存马密码
+    --mem-path <arg>           内存马路径
+    --mem-type <arg>           打入内存马类型(输入ls查看可用类型)
  -rf,--rememberme-flag <arg>   自定义rememberMe字段名
- -s,--scan                     漏洞扫描模块 | 扫描漏洞
+ -s,--scan                     扫描漏洞
     --shell                    进入Shell模式
  -u,--url <arg>                目标地址
 ```
