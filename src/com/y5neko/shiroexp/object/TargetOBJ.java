@@ -1,10 +1,10 @@
-package com.y5neko.shiroexp.payloads;
+package com.y5neko.shiroexp.object;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 请求对象
+ * Target类，用以生成Web请求的对象
  */
 public class TargetOBJ {
     private String url;

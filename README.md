@@ -14,7 +14,7 @@ Shiro漏洞利用工具
 - 漏洞探测(已完成Shiro550 URLDNS探测)
 - 探测回显链(已完成CB1+TomcatEcho、Spring、AllEcho回显链)
 - 漏洞利用(已完成命令执行、Shell模式)
-- 内存马
+- 注入内存马(支持蚁剑、冰蝎、哥斯拉等filter、servlet类型)
 
 ## Help
 ```zsh
@@ -67,8 +67,16 @@ usage: java ShiroEXP.jar [-be] [-bk] [-c <arg>] [--cookie <arg>] [-e
 
 ![shellmode.png](img/shellmode.png)
 
+**注入内存马**
+
+![injectmemshell.png](img/injectmemshell.png)
+
 ## Thanks
 
 @frohoff   https://github.com/frohoff/ysoserial
 
 @SummerSec  https://github.com/SummerSec/ShiroAttack2
+
+## Warnning
+
+**本工具仅可用作学习用途和授权渗透测试，使用本工具造成的后果由使用者自行承担。**

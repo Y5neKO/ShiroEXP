@@ -1,7 +1,10 @@
-package com.y5neko.shiroexp.request;
+package com.y5neko.shiroexp.object;
 
 import okhttp3.Headers;
 
+/**
+ * Response类，用以完成Web请求接收响应内容
+ */
 public class ResponseOBJ {
     private byte[] response;
     private Headers headers;

@@ -1,7 +1,9 @@
 package com.y5neko.shiroexp.request;
 
+import com.y5neko.shiroexp.misc.Log;
 import com.y5neko.shiroexp.misc.Tools;
-import com.y5neko.shiroexp.payloads.TargetOBJ;
+import com.y5neko.shiroexp.object.ResponseOBJ;
+import com.y5neko.shiroexp.object.TargetOBJ;
 import okhttp3.*;
 
 import java.io.IOException;
@@ -84,7 +86,7 @@ public class HttpRequest {
                 return responseOBJ;
             }
         } catch (IOException e) {
-            System.err.println(e.getMessage());
+            System.out.println(Log.buffer_logging("EROR", e.getMessage()));
         }
         return null;
     }

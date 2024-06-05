@@ -11,7 +11,6 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.InvalidAlgorithmParameterException;
@@ -255,10 +254,9 @@ public class Tools {
     public static byte[] fileToBytes(String filePath) {
         File file1 = new File(filePath);
         try {
-            byte[] bytes = Files.readAllBytes(file1.toPath());
-            return bytes;
+            return Files.readAllBytes(file1.toPath());
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
         }
         return null;
     }
@@ -283,25 +281,22 @@ public class Tools {
         return results.get(0);
     }
 
-    public static void addHeader(Map<String, String> headers, String key, String value) {
-        headers.put(key, value);
+    /**
+     * 校验字符串数组中是否含有字符串
+     * @param array 字符串数组
+     * @param target 目标字符串
+     * @return 标识
+     */
+    public static boolean containsString(String[] array, String target) {
+        for (String str : array) {
+            if (str.equals(target)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void main(String[] args) {
-        byte[] test = fileToBytes("C:\\Tools\\BlueTeamTools0.92\\outputShiroBytes_sum.ser");
-//        System.out.println(bytesToString(test));
-        Object o;
-
-        try (FileInputStream fileIn = new FileInputStream("C:\\Tools\\BlueTeamTools0.92\\outputShiroBytes_sum.ser");
-             ObjectInputStream in = new ObjectInputStream(fileIn)) {
-
-            Object person = in.readObject();
-            System.out.println("Deserialized Person:");
-            System.out.println(person);
-
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
+        System.out.println();
     }
 }

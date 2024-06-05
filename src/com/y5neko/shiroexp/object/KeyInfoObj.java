@@ -1,6 +1,9 @@
-package com.y5neko.shiroexp.payloads;
+package com.y5neko.shiroexp.object;
 
-public class KeyInfo {
+/**
+ * ShiroKey类，用以完成key相关操作
+ */
+public class KeyInfoObj {
     String key;
     String type;
 

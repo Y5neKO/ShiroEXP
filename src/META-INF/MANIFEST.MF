@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
-Main-Class: com.y5neko.shiroexp.Main
+Main-Class: com.y5neko.shiroexp.Console
 

