@@ -14,6 +14,15 @@ public class TargetOBJ {
     private Map<String, String> headers = new HashMap<>();
     private String gadget;
     private String echo = "AllEcho";
+    private String proxy;
+
+    public String getProxy() {
+        return proxy;
+    }
+
+    public void setProxy(String proxy) {
+        this.proxy = proxy;
+    }
 
     public String getEcho() {
         return echo;

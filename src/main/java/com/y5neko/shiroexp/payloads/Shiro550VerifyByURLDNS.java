@@ -21,8 +21,8 @@ public class Shiro550VerifyByURLDNS {
         System.out.println(Log.buffer_logging("INFO", "正在获取dnslog平台信息"));
         String[] dnslogInfo = DnslogConfig.getDnslogDomain();
         String dnslogBaseURL = dnslogInfo[0];
-        System.out.println(Log.buffer_logging("INFO", "dnslog平台地址: http://javaweb.org/"));
-        System.out.println(Log.buffer_logging("INFO", "dnslog验证地址: http://" + verifyRandom + "." + dnslogBaseURL));
+        System.out.println(Log.buffer_logging("INFO", "dnslog平台地址: https://dnslog.org/"));
+        System.out.println(Log.buffer_logging("INFO", "dnslog验证地址: https://" + verifyRandom + "." + dnslogBaseURL));
         System.out.println(Log.buffer_logging("INFO", "dnslog查询Token: " + dnslogInfo[2]));
         System.out.println(Log.buffer_logging("INFO", "dnslog查询Key: " + dnslogInfo[1]));
 
@@ -39,8 +39,8 @@ public class Shiro550VerifyByURLDNS {
         HttpRequest.httpRequest(targetOBJ, new FormBody.Builder().build(), headers, "GET");
 
         // 延时5s进行查询，防止延时误报
-        System.out.println(Log.buffer_logging("INFO", "正在验证，延时3秒防止漏报"));
-        Thread.sleep(3000);
+        System.out.println(Log.buffer_logging("INFO", "正在验证，延时5秒防止漏报"));
+        Thread.sleep(5000);
         String dnslogRecord = DnslogConfig.getDnslogRecord(dnslogInfo);
         if (dnslogRecord.contains(verifyRandom)){
             System.out.println(Log.buffer_logging("SUCC", "验证成功，目标存在Shiro550漏洞且出网"));

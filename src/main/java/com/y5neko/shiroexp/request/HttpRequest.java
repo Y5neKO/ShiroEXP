@@ -7,6 +7,8 @@ import com.y5neko.shiroexp.object.TargetOBJ;
 import okhttp3.*;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,6 +37,13 @@ public class HttpRequest {
             requestBuilder = new Request.Builder().post(formBody).url(targetOBJ.getUrl());
         } else {
             requestBuilder = new Request.Builder().url(targetOBJ.getUrl());
+        }
+
+        if (targetOBJ.getProxy()!= null){
+            // 开启代理
+            String proxy_host = targetOBJ.getProxy().split(":")[0];
+            String proxy_port = targetOBJ.getProxy().split(":")[1];
+            client = client.newBuilder().proxy(new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(proxy_host, Integer.parseInt(proxy_port)))).build();
         }
 
         return getResponseOBJ(merged_headers, client, requestBuilder, responseOBJ);

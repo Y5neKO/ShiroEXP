@@ -13,6 +13,6 @@ public class Copyright {
             "                                                       GitHub: https://github.com/Y5neKO\n";
 
      public static String getLogo() {
-         return String.format(logo, Tools.color("0.1", "CYAN"), Tools.color("Y5neKO", "YELLOW"));
+         return String.format(logo, Tools.color("0.2", "CYAN"), Tools.color("Y5neKO", "YELLOW"));
      }
 }

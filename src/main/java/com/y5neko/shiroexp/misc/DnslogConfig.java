@@ -12,7 +12,7 @@ public class DnslogConfig {
     public static String[] getDnslogDomain(){
         Map<String, String> headers = new HashMap<>();
 
-        String response = Tools.bytesToString(Objects.requireNonNull(HttpRequest.httpRequest_simple("http://javaweb.org/new_gen", new FormBody.Builder().add("domain", "dns.su18.org.").build(), headers, "POST")).getResponse());
+        String response = Tools.bytesToString(Objects.requireNonNull(HttpRequest.httpRequest_simple("https://dnslog.org/new_gen", new FormBody.Builder().add("domain", "log.dnslog.sbs.").build(), headers, "POST")).getResponse());
         JSONObject jsonObject = JSONObject.parseObject(response);
         return new String[]{(String) jsonObject.get("domain"), (String) jsonObject.get("key"), (String) jsonObject.get("token")};
     }
@@ -20,7 +20,7 @@ public class DnslogConfig {
     public static String getDnslogRecord(String[] dnslogInfo){
         Map<String, String> headers = new HashMap<>();
 
-        return Tools.bytesToString(Objects.requireNonNull(HttpRequest.httpRequest_simple("http://javaweb.org/" + dnslogInfo[2], new FormBody.Builder().add("domain", "dns.su18.org.").build(), headers, "POST")).getResponse());
+        return Tools.bytesToString(Objects.requireNonNull(HttpRequest.httpRequest_simple("https://dnslog.org/" + dnslogInfo[2], new FormBody.Builder().add("domain", "log.dnslog.sbs.").build(), headers, "POST")).getResponse());
     }
 
     public static void main(String[] args) {
