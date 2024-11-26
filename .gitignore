@@ -28,3 +28,4 @@ bin/
 ### Mac OS ###
 .DS_Store
 ._*
+/target/

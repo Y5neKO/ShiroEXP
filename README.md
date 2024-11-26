@@ -4,7 +4,7 @@ Shiro漏洞利用工具
 
 ## Environment
 
-`JDK 8` | `Intellij 2024`
+`JDK 8u421` | `Intellij 2024`
 
 > ⚠️ _使用其他JDK版本可能出现未知的错误_
 
@@ -15,6 +15,7 @@ Shiro漏洞利用工具
 - 探测回显链(已完成CB1+TomcatEcho、Spring、AllEcho回显链)
 - 漏洞利用(已完成命令执行、Shell模式)
 - 注入内存马(支持蚁剑、冰蝎、哥斯拉等filter、servlet类型)
+- 全局代理(已完成)
 
 ## Help
 ```zsh
@@ -74,6 +75,11 @@ usage: java ShiroEXP.jar [-be] [-bk] [-c <arg>] [--cookie <arg>] [--gadget
 **注入内存马**
 
 ![injectmemshell.png](img/injectmemshell.png)
+
+## Build
+
+自行编译打jar包时，可能会遇到**找不到或无法加载主类**的问题，经排查是因为bcprov包中的签名文件，打包后删除*.DSA、*.SF文件即可
+![img.png](img/bcprov.png)
 
 ## Thanks
 

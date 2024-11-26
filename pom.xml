@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.y5neko</groupId>
-    <artifactId>ShiroEXP-master</artifactId>
+    <groupId>com.y5neko.shiroexp</groupId>
+    <artifactId>ShiroEXP</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
@@ -86,7 +86,7 @@
         <dependency>
             <groupId>com.squareup.okio</groupId>
             <artifactId>okio-jvm</artifactId>
-            <version>3.0.0</version>
+            <version>3.4.0</version>
         </dependency>
 
         <dependency>
