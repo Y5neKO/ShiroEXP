@@ -1,5 +1,6 @@
 ### IntelliJ IDEA ###
 out/
+target/
 !**/src/main/**/out/
 !**/src/test/**/out/
 
@@ -28,4 +29,3 @@ bin/
 ### Mac OS ###
 .DS_Store
 ._*
-/target/

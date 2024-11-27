@@ -19,20 +19,20 @@ Shiro漏洞利用工具
 
 ## Help
 ```zsh
-C:\Tools\Red_Tools\ShiroEXP>java -jar ShiroEXP.jar -h
+➜  ShiroEXP_jar git:(main) ✗ java -jar ShiroEXP.jar -h
 
-   _____    __      _                    ______   _  __    ____
+   _____    __      _                    ______   _  __    ____ 
   / ___/   / /_    (_)   _____  ____    / ____/  | |/ /   / __ \
   \__ \   / __ \  / /   / ___/ / __ \  / __/     |   /   / /_/ /
- ___/ /  / / / / / /   / /    / /_/ / / /___    /   |   / ____/
-/____/  /_/ /_/ /_/   /_/     \____/ /_____/   /_/|_|  /_/
-                                                       v1.0 by Y5neKO :)
+ ___/ /  / / / / / /   / /    / /_/ / / /___    /   |   / ____/ 
+/____/  /_/ /_/ /_/   /_/     \____/ /_____/   /_/|_|  /_/      
+                                                       v0.2 by Y5neKO :)
                                                        GitHub: https://github.com/Y5neKO
 
 usage: java ShiroEXP.jar [-be] [-bk] [-c <arg>] [--cookie <arg>] [--gadget
        <arg>] [--gadget-echo <arg>] [-h] [-k <arg>] [--mem-pass <arg>]
-       [--mem-path <arg>] [--mem-type <arg>] [-rf <arg>] [-s] [--shell]
-       [-u <arg>]
+       [--mem-path <arg>] [--mem-type <arg>] [--proxy <arg>] [-rf <arg>]
+       [-s] [--shell] [-u <arg>]
  -be,--brute-echo              爆破回显链
  -bk,--brute-key               爆破key
  -c,--cmd <arg>                执行命令
@@ -44,6 +44,7 @@ usage: java ShiroEXP.jar [-be] [-bk] [-c <arg>] [--cookie <arg>] [--gadget
     --mem-pass <arg>           内存马密码
     --mem-path <arg>           内存马路径
     --mem-type <arg>           打入内存马类型(输入ls查看可用类型)
+    --proxy <arg>              设置代理(ip:port)
  -rf,--rememberme-flag <arg>   自定义rememberMe字段名
  -s,--scan                     扫描漏洞
     --shell                    进入Shell模式
@@ -76,10 +77,16 @@ usage: java ShiroEXP.jar [-be] [-bk] [-c <arg>] [--cookie <arg>] [--gadget
 
 ![injectmemshell.png](img/injectmemshell.png)
 
+![injectmemshell1.png](img/injectmemshell1.png)
+
+**全局代理**
+
+![proxy.png](img/proxy.png)
+
 ## Build
 
 自行编译打jar包时，可能会遇到**找不到或无法加载主类**的问题，经排查是因为bcprov包中的签名文件，打包后删除*.DSA、*.SF文件即可
-![img.png](img/bcprov.png)
+![bcprov.png](img/bcprov.png)
 
 ## Thanks
 
