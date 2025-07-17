@@ -1,0 +1,21 @@
+* {
+	-fx-primary-color: #007acc;
+	-fx-secondary-color: #4B6EAF;
+	-fx-grey-color: #b9b9b9;
+
+	-fx-focus-color: -fx-secondary-color;
+    -fx-font-family: "Consolas";
+
+    -fx-font-size: 15;
+}
+
+.text-field {
+	-fx-accent: -fx-primary-color;
+	-fx-background-color: -fx-grey-color, white;
+	-fx-background-insets: 0, 1 1 1 1;
+	-fx-background-radius: 0;
+}
+/*.text-field:focused {*/
+/*	-fx-background-color: -fx-primary-color, white;*/
+/*	-fx-border-color: blue;*/
+/*}*/

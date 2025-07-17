@@ -68,21 +68,21 @@ public class Console {
             }
 
             // 指定扫描key
-            if (cmd.hasOption("bk")) {
-                System.out.println(Log.buffer_logging("INFO", "开始爆破key..."));
-                KeyInfoObj keyInfoObj;
-                // 如果指定了自定义rememberMe字段
-                if (cmd.hasOption("rf")) {
-                    keyInfoObj = BruteKey.bruteKey(target, cmd.getOptionValue("rf"));
-                } else {
-                    keyInfoObj = BruteKey.bruteKey(target);
-                }
-                System.out.println(Log.buffer_logging("SUCC", "检测到key: " + keyInfoObj.getKey() + ", 加密算法: " + keyInfoObj.getType()));
-                return;
-            }
+//            if (cmd.hasOption("bk")) {
+//                System.out.println(Log.buffer_logging("INFO", "开始爆破key..."));
+//                KeyInfoObj keyInfoObj;
+//                // 如果指定了自定义rememberMe字段
+//                if (cmd.hasOption("rf")) {
+//                    keyInfoObj = BruteKey.bruteKey(target, cmd.getOptionValue("rf"));
+//                } else {
+//                    keyInfoObj = BruteKey.bruteKey(target);
+//                }
+//                System.out.println(Log.buffer_logging("SUCC", "检测到key: " + keyInfoObj.getKey() + ", 加密算法: " + keyInfoObj.getType()));
+//                return;
+//            }
             // 指定漏洞扫描
             else if (cmd.hasOption("s")) {
-                if (cmd.hasOption("e") && cmd.getOptionValue("e").equals("Shiro550")){
+                if (cmd.hasOption("e") && cmd.getOptionValue("e").equals("Shiro550Tab")){
                     Shiro550VerifyByURLDNS.verify(target);
                 } else if (cmd.hasOption("e") && cmd.getOptionValue("e").equals("Shiro721")){
                     System.out.println("Shiro721验证");
@@ -196,7 +196,7 @@ public class Console {
         options.addOption("s", "scan", false, "扫描漏洞");
         options.addOption("k", "key", true, "指定key");
         options.addOption("be", "brute-echo", false, "爆破回显链");
-//        options.addOption("e", "exp", true, "指定exp {Shiro550, Shiro721}");
+//        options.addOption("e", "exp", true, "指定exp {Shiro550Tab, Shiro721}");
         options.addOption(null, "cookie", true, "携带Cookie");
         options.addOption("c", "cmd", true, "执行命令");
         options.addOption(null, "gadget-echo", true, "指定回显链");

@@ -1,0 +1,71 @@
+/* 整个TabPane容器 */
+.tab-pane {
+    -fx-background-color: white;
+    -fx-tab-min-width: 120px;
+    -fx-tab-max-width: 200px;
+}
+
+/* 标签头区域 - 设置为白色 */
+.tab-header-area {
+    -fx-background-color: white;
+    -fx-padding: 0 0 0 10px;
+}
+
+/* 标签头背景 - 设置为白色 */
+.tab-header-background {
+    -fx-background-color: white;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 0 0 1px 0;
+}
+
+/* 单个标签样式 */
+.tab {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 12px 24px;
+    -fx-cursor: hand;
+    -fx-border-width: 0 0 2px 0;
+    -fx-border-color: transparent;
+}
+
+/* 标签文字样式 */
+.tab .tab-label {
+    -fx-text-fill: #666666;
+    -fx-font-family: 'Segoe UI', sans-serif;
+    -fx-font-weight: 600;
+    -fx-font-size: 14px;
+}
+
+/* 选中标签样式 */
+.tab:selected {
+    -fx-background-color: white;
+    -fx-border-color: #4285f4;
+}
+
+/* 选中标签文字样式 */
+.tab:selected .tab-label {
+    -fx-text-fill: #4285f4;
+}
+
+/* 标签悬停效果 */
+.tab:hover {
+    -fx-background-color: #f5f5f5;
+}
+
+/* 内容区域样式 */
+.tab-content-area {
+    -fx-background-color: white;
+    -fx-padding: 20;
+}
+
+/* 聚焦效果 */
+.tab:selected:focused .tab-label {
+    -fx-underline: false;
+}
+
+/* 去除焦点指示器 */
+.tab:selected .focus-indicator {
+    -fx-border-width: 0;
+    -fx-border-color: transparent;
+}

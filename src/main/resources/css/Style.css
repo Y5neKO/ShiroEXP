@@ -1,0 +1,19 @@
+.root .focused {
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+    -fx-border-color: -fx-base; /* 或者设置为组件的默认边框颜色 */
+    -fx-border-width: 1; /* 或者设置为组件的默认边框宽度 */
+}
+
+/* styles.css */
+.root {
+    -fx-font-family: "Microsoft YaHei";
+}
+
+/* 移除所有焦点指示器节点的边框 */
+.focus-indicator {
+    -fx-border-width: 0;
+    -fx-border-color: transparent;
+    -fx-background-color: transparent;    /* 防止背景色干扰 */
+}
+

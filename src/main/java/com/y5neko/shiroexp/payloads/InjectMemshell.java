@@ -49,7 +49,7 @@ public class InjectMemshell {
 
         // 注入内存马
         ResponseOBJ responseOBJ = HttpRequest.httpRequest(targetOBJ, formBody, headers, "POST");
-//        System.out.println(Tools.bytesToString(responseOBJ.getResponse()));
+//        System.out.println(Components.bytesToString(responseOBJ.getResponse()));
         if (Tools.bytesToString(responseOBJ.getResponse()).contains("Success")) {
             System.out.println(Log.buffer_logging("SUCC", "内存马注入成功"));
             System.out.println("----------");
