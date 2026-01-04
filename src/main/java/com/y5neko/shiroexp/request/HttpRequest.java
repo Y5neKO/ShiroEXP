@@ -1,5 +1,6 @@
 package com.y5neko.shiroexp.request;
 
+import com.y5neko.shiroexp.config.GlobalVariable;
 import com.y5neko.shiroexp.misc.Log;
 import com.y5neko.shiroexp.misc.Tools;
 import com.y5neko.shiroexp.object.ResponseOBJ;
@@ -40,9 +41,15 @@ public class HttpRequest {
         }
 
         if (targetOBJ.getProxy()!= null){
-            // 开启代理
+            // 开启代理（使用 targetOBJ 的代理）
             String proxy_host = targetOBJ.getProxy().split(":")[0];
             String proxy_port = targetOBJ.getProxy().split(":")[1];
+            client = client.newBuilder().proxy(new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(proxy_host, Integer.parseInt(proxy_port)))).build();
+        } else if (GlobalVariable.getGlobalProxy() != null) {
+            // 使用全局代理
+            String globalProxy = GlobalVariable.getGlobalProxy();
+            String proxy_host = globalProxy.split(":")[0];
+            String proxy_port = globalProxy.split(":")[1];
             client = client.newBuilder().proxy(new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(proxy_host, Integer.parseInt(proxy_port)))).build();
         }
 
@@ -130,8 +137,9 @@ public class HttpRequest {
             String value = entry.getValue();
             // 检查是否已经存在该键
             if (oldHeaders.containsKey(key)) {
-                // 追加新值到现有值后面，用逗号隔开
-                oldHeaders.compute(key, (k, existingValue) -> existingValue + value);
+                // Cookie 使用分号+空格分隔，其他 header 使用逗号分隔
+                String separator = "Cookie".equalsIgnoreCase(key) ? "; " : ", ";
+                oldHeaders.compute(key, (k, existingValue) -> existingValue + separator + value);
             } else {
                 // 添加新的键值对
                 oldHeaders.put(key, value);

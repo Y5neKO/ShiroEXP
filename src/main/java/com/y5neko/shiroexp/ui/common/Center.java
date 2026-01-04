@@ -1,6 +1,9 @@
 package com.y5neko.shiroexp.ui.common;
 
+import com.y5neko.shiroexp.ui.tabpane.ExploitTab;
+import com.y5neko.shiroexp.ui.tabpane.SettingsTab;
 import com.y5neko.shiroexp.ui.tabpane.Shiro550Tab;
+import com.y5neko.shiroexp.ui.tabpane.Shiro721Tab;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
@@ -29,15 +32,15 @@ public class Center {
 
         // Shiro721标签页
         Tab shiro721Tab = new Tab("Shiro721");
-        shiro721Tab.setContent(new StackPane(new Label("Content 2")));
+        shiro721Tab.setContent(new Shiro721Tab().getShiro721Tab());
 
         // 漏洞利用标签页
         Tab exploitTab = new Tab("漏洞利用");
-        exploitTab.setContent(new StackPane(new Label("漏洞利用")));
+        exploitTab.setContent(new ExploitTab().getExploitTab());
 
         // 设置标签页
         Tab settingsTab = new Tab("设置");
-        settingsTab.setContent(new StackPane(new Label("设置")));
+        settingsTab.setContent(new SettingsTab().getSettingsTab());
 
         // 添加到 TabPane
         tabPane.getTabs().addAll(shiro550Tab, shiro721Tab, exploitTab, settingsTab);

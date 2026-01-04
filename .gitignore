@@ -3,6 +3,7 @@ out/
 target/
 !**/src/main/**/out/
 !**/src/test/**/out/
+.idea/
 
 ### Eclipse ###
 .apt_generated
@@ -29,4 +30,7 @@ bin/
 ### Mac OS ###
 .DS_Store
 ._*
-target/
+
+### Other ###
+.spec-workflow/
+.claude/

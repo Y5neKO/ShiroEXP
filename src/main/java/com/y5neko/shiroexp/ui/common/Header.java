@@ -101,35 +101,20 @@ public class Header {
         menuBar = new MenuBar();
         menuBar.setStyle("-fx-background-color: transparent;");
         menuBar.setPadding(new Insets(0));
-        Menu settingMenu = new Menu("设置");
+
+        // 只保留帮助菜单
         Menu helpMenu = new Menu("帮助");
-        menuBar.getMenus().addAll(settingMenu, helpMenu);
-        // ----------第一个按钮----------
-        MenuItem themeSettingProxyButton = new MenuItem("主题设置(暂不支持)");
-        settingMenu.getItems().addAll(themeSettingProxyButton);
-        themeSettingProxyButton.setOnAction(event -> System.out.println("主题设置"));
-        // ----------第二个按钮----------
+        menuBar.getMenus().addAll(helpMenu);
+
+        // 关于按钮
         MenuItem aboutButton = new MenuItem("关于");
         helpMenu.getItems().addAll(aboutButton);
-        aboutButton.setOnAction(event -> {
-//            try {
-//                new AboutStage();
-//            } catch (IOException e) {
-//                throw new RuntimeException(e);
-//            }
-        });
-        // ----------第三个按钮----------
+        aboutButton.setOnAction(event -> showAboutDialog());
+
+        // 检查更新按钮
         MenuItem checkUpdateButton = new MenuItem("检查更新");
         helpMenu.getItems().add(checkUpdateButton);
-        checkUpdateButton.setOnAction(event -> {
-//            new CheckVersionStage(Components.checkVersion());
-        });
-        // ----------第四个按钮----------
-        MenuItem pluginsButton = new MenuItem("插件");
-        pluginsButton.setOnAction(event -> {
-//            new PluginsStage(pluginInfos);
-        });
-        settingMenu.getItems().add(pluginsButton);
+        checkUpdateButton.setOnAction(event -> showCheckUpdateDialog());
     }
 
     /**
@@ -156,5 +141,42 @@ public class Header {
             stage.setX(newX);
             stage.setY(newY);
         }
+    }
+
+    /**
+     * 显示关于对话框
+     */
+    private void showAboutDialog() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("关于 ShiroEXP");
+        alert.setHeaderText("ShiroEXP v0.2");
+
+        String content = "Apache Shiro 漏洞利用工具\n\n" +
+                "功能特性:\n" +
+                "✓ Shiro550 Key 爆破\n" +
+                "✓ 回显链自动检测\n" +
+                "✓ 命令执行 & Shell 模式\n" +
+                "✓ 内存马注入\n" +
+                "✓ 全局代理支持\n\n" +
+                "作者: Y5neKO\n" +
+                "GitHub: https://github.com/Y5neKO\n\n" +
+                "免责声明:\n" +
+                "本工具仅可用作学习用途和授权渗透测试，\n" +
+                "使用本工具造成的后果由使用者自行承担。";
+
+        alert.setContentText(content);
+        alert.getDialogPane().setMinWidth(400);
+        alert.showAndWait();
+    }
+
+    /**
+     * 显示检查更新对话框
+     */
+    private void showCheckUpdateDialog() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("检查更新");
+        alert.setHeaderText(null);
+        alert.setContentText("当前已是最新版本 v0.2");
+        alert.showAndWait();
     }
 }

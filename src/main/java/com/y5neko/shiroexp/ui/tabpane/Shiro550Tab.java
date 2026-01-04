@@ -1,7 +1,10 @@
 package com.y5neko.shiroexp.ui.tabpane;
 
+import com.y5neko.shiroexp.config.ExploitConfig;
 import com.y5neko.shiroexp.object.TargetOBJ;
+import com.y5neko.shiroexp.payloads.BruteGadget;
 import com.y5neko.shiroexp.payloads.BruteKey;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -10,6 +13,8 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Shiro550Tab {
     // 需要进行后续操作的全局组件
@@ -17,6 +22,7 @@ public class Shiro550Tab {
     public ComboBox<String> exploitChainComboBox;
     public ComboBox<String> echoGadgetsComboBox;
     public ComboBox<String> cryptTypeComboBox;
+    private TextField cookieTextField;
 
     public VBox getShiro550Tab(){
         VBox shiro550Tab = new VBox();
@@ -85,7 +91,32 @@ public class Shiro550Tab {
 
         exploitEchoChainBox.getChildren().addAll(exploitChainsLabel, exploitChainComboBox, echoGadgetsLabel, echoGadgetsComboBox, checkGadgetsButton, clearLogButton);
 
-        // ================================第四行日志==================================
+        // ================================第四行高级配置==================================
+        TitledPane advancedConfigPane = new TitledPane();
+        advancedConfigPane.setText("高级配置");
+        advancedConfigPane.setCollapsible(true);
+        advancedConfigPane.setExpanded(false);
+
+        VBox advancedConfigContent = new VBox();
+        advancedConfigContent.setSpacing(10);
+        advancedConfigContent.setPadding(new Insets(10, 0, 10, 0));
+
+        // Cookie 配置
+        HBox cookieBox = new HBox();
+        cookieBox.setAlignment(Pos.CENTER);
+        cookieBox.setSpacing(10);
+
+        Label cookieLabel = new Label("Cookie: ");
+        cookieTextField = new TextField();
+        cookieTextField.setPromptText("例: key=value; key2=value2");
+        HBox.setHgrow(cookieTextField, javafx.scene.layout.Priority.ALWAYS);
+
+        cookieBox.getChildren().addAll(cookieLabel, cookieTextField);
+
+        advancedConfigContent.getChildren().add(cookieBox);
+        advancedConfigPane.setContent(advancedConfigContent);
+
+        // ================================第五行日志==================================
         HBox logBox = new HBox();
         logBox.setAlignment(Pos.CENTER);
         logBox.setSpacing(10);
@@ -124,10 +155,19 @@ public class Shiro550Tab {
                         try {
                             TargetOBJ targetOBJ = new TargetOBJ(targetUrlTextField.getText());
                             targetOBJ.setRememberMeFlag(rememberMeValueTextField.getText());
+
+                            // 应用高级配置（Cookie）
+                            applyAdvancedConfig(targetOBJ, cookieTextField);
+
                             BruteKey.bruteKey(targetOBJ, globalComponents);
                         } catch (Exception e) {
-//                            logTextArea.appendText(e.getMessage() + "\n");
-                            e.printStackTrace();
+                            final String errorMsg = e.getMessage();
+                            javafx.application.Platform.runLater(() -> {
+                                logTextArea.appendText("[EROR]" + (errorMsg != null && !errorMsg.isEmpty() ? errorMsg : "rememberMe 检测失败") + "\n");
+                                if (errorMsg == null || errorMsg.isEmpty()) {
+                                    logTextArea.appendText("[DEBUG] " + e.getClass().getSimpleName() + "\n");
+                                }
+                            });
                         }
                         return null;
                     }
@@ -147,7 +187,115 @@ public class Shiro550Tab {
         });
 
         checkGadgetsButton.setOnMouseClicked(event -> {
-            logTextArea.appendText("检测回显的逻辑\n");
+            // 验证必填项
+            if (targetUrlTextField.getText().isEmpty()) {
+                logTextArea.appendText("[EROR]请先输入目标地址\n");
+                return;
+            }
+            if (rememberMeValueTextField.getText().isEmpty()) {
+                logTextArea.appendText("[EROR]请先完成 Key 检测\n");
+                return;
+            }
+
+            checkGadgetsButton.setDisable(true);
+            logTextArea.appendText("[INFO]正在检测回显链...\n");
+
+            // 异步执行检测任务
+            Task<Void> task = new Task<Void>() {
+                @Override
+                protected Void call() {
+                    try {
+                        // 创建目标对象
+                        TargetOBJ targetOBJ = new TargetOBJ(targetUrlTextField.getText());
+                        targetOBJ.setKey(rememberMeValueTextField.getText());
+                        targetOBJ.setRememberMeFlag(rememberMeKeywordTextField.getText());
+
+                        // 应用高级配置（Cookie）
+                        applyAdvancedConfig(targetOBJ, cookieTextField);
+
+                        // 执行回显链检测（带进度回调）
+                        final TextArea logRef = logTextArea;
+                        java.util.List<String> validGadgets = BruteGadget.bruteGadget(targetOBJ, new BruteGadget.ProgressCallback() {
+                            @Override
+                            public void onProgress(String message) {
+                                javafx.application.Platform.runLater(() -> logRef.appendText(message + "\n"));
+                            }
+
+                            @Override
+                            public void onSuccess(String gadget, String echo) {
+                                javafx.application.Platform.runLater(() -> {
+                                    logRef.appendText("[SUCC]发现回显链: " + gadget + " + " + echo + "\n");
+                                });
+                            }
+
+                            @Override
+                            public void onFail(String gadget, String echo) {
+                                // 静默失败，不输出
+                            }
+                        });
+
+                        // 更新 UI
+                        javafx.application.Platform.runLater(() -> {
+                            if (!validGadgets.isEmpty()) {
+                                // 自动选择第一个有效的回显链
+                                String firstValid = validGadgets.get(0);
+                                String[] parts = firstValid.split("\\+");
+                                if (parts.length == 2) {
+                                    exploitChainComboBox.getSelectionModel().select(parts[0]);
+                                    echoGadgetsComboBox.getSelectionModel().select(parts[1]);
+
+                                    // 更新全局配置
+                                    ExploitConfig config = ExploitConfig.getInstance();
+                                    config.setTargetUrl(targetUrlTextField.getText().trim());
+                                    config.setKey(rememberMeValueTextField.getText().trim());
+                                    config.setGadget(parts[0]);
+                                    config.setEcho(parts[1]);
+                                    config.setCryptType(cryptTypeComboBox.getValue());
+
+                                    // 应用高级配置到全局配置
+                                    if (cookieTextField != null && !cookieTextField.getText().trim().isEmpty()) {
+                                        config.setCookie(cookieTextField.getText().trim());
+                                    }
+
+                                    // 提示用户
+                                    logTextArea.appendText("\n");
+                                    logTextArea.appendText("========================================\n");
+                                    logTextArea.appendText("[提示] 配置已自动同步到「漏洞利用」标签页\n");
+                                    logTextArea.appendText("========================================\n");
+
+                                    // 自动更新漏洞利用标签页的配置
+                                    ExploitTab.updateFromConfigStatic();
+
+                                    logTextArea.appendText("请切换到「漏洞利用」标签页进行命令执行和内存马注入\n");
+                                    logTextArea.appendText("========================================\n\n");
+                                }
+                            }
+                        });
+
+                    } catch (Exception e) {
+                        final String errorMsg = e.getMessage();
+                        javafx.application.Platform.runLater(() -> {
+                            logTextArea.appendText("[EROR]" + (errorMsg != null ? errorMsg : "操作失败，请检查配置") + "\n");
+                            // 详细错误信息（调试用）
+                            if (errorMsg == null || errorMsg.isEmpty()) {
+                                logTextArea.appendText("[DEBUG] " + e.getClass().getSimpleName() + "\n");
+                            }
+                        });
+                    }
+                    return null;
+                }
+
+                @Override
+                protected void succeeded() {
+                    checkGadgetsButton.setDisable(false);
+                }
+
+                @Override
+                protected void failed() {
+                    checkGadgetsButton.setDisable(false);
+                }
+            };
+            new Thread(task).start();
         });
 
         clearLogButton.setOnMouseClicked(event -> {
@@ -155,8 +303,22 @@ public class Shiro550Tab {
         });
 
         // =============================最后添加所有的VBox到shiro550Tab===========================
-        shiro550Tab.getChildren().addAll(targetUrlBox,rememberMeBox, exploitEchoChainBox, logBox);
+        shiro550Tab.getChildren().addAll(targetUrlBox, rememberMeBox, exploitEchoChainBox, advancedConfigPane, logBox);
         return shiro550Tab;
+    }
+
+    /**
+     * 应用高级配置到目标对象
+     * @param targetOBJ 目标对象
+     * @param cookie Cookie 文本框
+     */
+    private void applyAdvancedConfig(TargetOBJ targetOBJ, TextField cookie) {
+        // 应用 Cookie
+        if (cookie != null && !cookie.getText().trim().isEmpty()) {
+            Map<String, String> headers = new HashMap<>();
+            headers.put("Cookie", cookie.getText().trim());
+            targetOBJ.setHeaders(headers);
+        }
     }
 
     public class GlobalComponents {

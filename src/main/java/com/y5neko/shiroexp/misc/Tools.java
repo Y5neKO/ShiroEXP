@@ -118,6 +118,20 @@ public class Tools {
     }
 
     /**
+     * 移除 ANSI 转义字符（用于 GUI 显示）
+     * @param str 包含 ANSI 转义字符的字符串
+     * @return 移除转义字符后的纯文本
+     */
+    public static String stripAnsiCodes(String str) {
+        if (str == null) {
+            return null;
+        }
+        // 匹配格式：[[36m, [0m, [31m 等
+        // 模式：[ + 数字/分号 + 字母
+        return str.replaceAll("\\[[0-9;]+[a-zA-Z]", "");
+    }
+
+    /**
      * 合并字节码
      * @param a 字节码a
      * @param b 字节码b

