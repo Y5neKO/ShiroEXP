@@ -1,5 +1,6 @@
 package com.y5neko.shiroexp.ui.tabpane;
 
+import com.y5neko.shiroexp.config.AllList;
 import com.y5neko.shiroexp.config.ExploitConfig;
 import com.y5neko.shiroexp.object.TargetOBJ;
 import com.y5neko.shiroexp.payloads.BruteGadget;
@@ -76,12 +77,14 @@ public class Shiro550Tab {
         exploitEchoChainBox.setPadding(new Insets(10, 0, 10, 0));
 
         Label exploitChainsLabel = new Label("利用链: ");
-        ObservableList<String> exploitChains = FXCollections.observableArrayList("检测所有利用链", "CommonsBeanutils1");
+        ObservableList<String> exploitChains = FXCollections.observableArrayList("检测所有利用链");
+        exploitChains.addAll(AllList.gadgets);
         exploitChainComboBox = new ComboBox<>(exploitChains);
         exploitChainComboBox.setValue("检测所有利用链");
 
         Label echoGadgetsLabel = new Label("回显方式: ");
-        ObservableList<String> echoGadgets = FXCollections.observableArrayList("检测所有回显", "AllEcho", "TomcatEcho", "SpringEcho");
+        ObservableList<String> echoGadgets = FXCollections.observableArrayList("检测所有回显");
+        echoGadgets.addAll(AllList.echoGadgets);
         echoGadgetsComboBox = new ComboBox<>(echoGadgets);
         echoGadgetsComboBox.setValue("检测所有回显");
 
@@ -197,6 +200,30 @@ public class Shiro550Tab {
                 return;
             }
 
+            // 获取当前下拉框选择
+            String selectedGadget = exploitChainComboBox.getValue();
+            String selectedEcho = echoGadgetsComboBox.getValue();
+
+            // 根据选择构建测试列表
+            java.util.List<String> gadgetsToTest = new java.util.ArrayList<>();
+            java.util.List<String> echosToTest = new java.util.ArrayList<>();
+
+            if ("检测所有利用链".equals(selectedGadget)) {
+                // 情况1: 检测所有利用链
+                gadgetsToTest.addAll(java.util.Arrays.asList(AllList.gadgets));
+            } else {
+                // 情况2/3: 特定利用链
+                gadgetsToTest.add(selectedGadget);
+            }
+
+            if ("检测所有回显".equals(selectedEcho)) {
+                // 情况1: 检测所有回显
+                echosToTest.addAll(java.util.Arrays.asList(AllList.echoGadgets));
+            } else {
+                // 情况2/3: 特定回显
+                echosToTest.add(selectedEcho);
+            }
+
             checkGadgetsButton.setDisable(true);
             logTextArea.appendText("[INFO]正在检测回显链...\n");
 
@@ -215,7 +242,7 @@ public class Shiro550Tab {
 
                         // 执行回显链检测（带进度回调）
                         final TextArea logRef = logTextArea;
-                        java.util.List<String> validGadgets = BruteGadget.bruteGadget(targetOBJ, new BruteGadget.ProgressCallback() {
+                        java.util.List<String> validGadgets = BruteGadget.bruteGadgetCustom(targetOBJ, targetOBJ.getKey(), gadgetsToTest, echosToTest, new BruteGadget.ProgressCallback() {
                             @Override
                             public void onProgress(String message) {
                                 javafx.application.Platform.runLater(() -> logRef.appendText(message + "\n"));

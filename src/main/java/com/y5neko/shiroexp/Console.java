@@ -95,7 +95,7 @@ public class Console {
             // 指定爆破回显链
             else if (cmd.hasOption("be")) {
                 System.out.println(Log.buffer_logging("INFO", "正在爆破回显链..."));
-                List<String> vaildGadgets = BruteGadget.bruteGadget(target);
+                List<String> vaildGadgets = BruteGadget.bruteGadget(target, target.getKey());
                 return;
             }
             // 指定命令执行
@@ -168,7 +168,20 @@ public class Console {
 
                 System.out.println(Log.buffer_logging("INFO", "正在注入内存马..."));
                 try {
-                    InjectMemshell.injectMemshell(target, cmd.getOptionValue("mem-type"), memPath, memPass, cmd.getOptionValue("gadget"));
+                    InjectMemshell.InjectResult result = InjectMemshell.injectMemshell(target, cmd.getOptionValue("mem-type"), memPath, memPass, cmd.getOptionValue("gadget"));
+                    if (result.success) {
+                        System.out.println(Log.buffer_logging("SUCC", result.message));
+                        System.out.println("----------");
+                        System.out.println("类型: " + result.memshellType);
+                        System.out.println("地址: " + result.path);
+                        System.out.println("密码: " + result.password);
+                        System.out.println("----------");
+                    } else {
+                        System.out.println(Log.buffer_logging("EROR", result.message));
+                        System.out.println("----------");
+                        System.out.println("响应内容: " + result.response);
+                        System.out.println("----------");
+                    }
                 } catch (Exception e) {
                     System.err.println(Log.buffer_logging("EROR", e.getMessage()));
                 }

