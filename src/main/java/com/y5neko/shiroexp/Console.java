@@ -53,7 +53,7 @@ public class Console {
 
             // 指定key
             if (cmd.hasOption("k")){
-                target.setKey("k");
+                target.setKey(cmd.getOptionValue("k"));
             }
 
             // 指定gadget-echo
@@ -168,7 +168,7 @@ public class Console {
 
                 System.out.println(Log.buffer_logging("INFO", "正在注入内存马..."));
                 try {
-                    InjectMemshell.InjectResult result = InjectMemshell.injectMemshell(target, cmd.getOptionValue("mem-type"), memPath, memPass, cmd.getOptionValue("gadget"));
+                    MemshellService.InjectResult result = MemshellService.injectMemshell(target, cmd.getOptionValue("mem-type"), memPath, memPass, cmd.getOptionValue("gadget"));
                     if (result.success) {
                         System.out.println(Log.buffer_logging("SUCC", result.message));
                         System.out.println("----------");

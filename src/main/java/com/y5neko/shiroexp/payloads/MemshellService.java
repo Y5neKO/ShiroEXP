@@ -15,9 +15,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 内存马注入模块
+ * 内存马注入服务
+ * 提供完整的内存马注入流程
  */
-public class InjectMemshell {
+public class MemshellService {
     /**
      * 内存马注入结果
      */
@@ -38,6 +39,7 @@ public class InjectMemshell {
             this.password = password;
         }
     }
+
     /**
      * 注入内存马
      * @param targetOBJ 请求对象

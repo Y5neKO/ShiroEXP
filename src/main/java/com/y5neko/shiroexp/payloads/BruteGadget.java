@@ -20,6 +20,12 @@ public class BruteGadget {
         void onSuccess(String gadget, String echo);
         void onFail(String gadget, String echo);
     }
+    /**
+     * 回显链爆破（基础版，无进度回调）
+     * @param url 目标对象
+     * @param key 密钥
+     * @return 有效的回显链列表（格式：gadget+echo）
+     */
     public static List<String> bruteGadget(TargetOBJ url, String key) {
         // 从 AllList 获取配置
         List<String> gadgets = new ArrayList<>(Arrays.asList(AllList.gadgets));
@@ -66,6 +72,8 @@ public class BruteGadget {
                         if (result.contains(checkString)) {
                             System.out.println(Log.buffer_logging("SUCC", "发现回显链: " + gadget + " -> " + echo));
                             success_gadgets.add(gadget + "+" + echo);
+                        } else {
+                            System.out.println(Log.buffer_logging("FAIL", "回显链无效: " + gadget + " -> " + echo));
                         }
                     }
                 } catch (IndexOutOfBoundsException e) {
@@ -77,16 +85,20 @@ public class BruteGadget {
             }
         }
 
+        // 输出汇总结果
+        System.out.println("========================================");
         if (success_gadgets.isEmpty()) {
             System.out.println(Log.buffer_logging("FAIL", "未发现有效回显链"));
         } else {
-            System.out.println(Log.buffer_logging("SUCC", "共发现" + success_gadgets.size() + "条有效回显链："));
+            System.out.println(Log.buffer_logging("SUCC", "共发现" + success_gadgets.size() + "条有效回显链"));
             System.out.println("----------");
             for (String success_gadget : success_gadgets) {
-                System.out.println(success_gadget);
+                String[] parts = success_gadget.split("\\+");
+                System.out.println(parts[0] + " + " + parts[1]);
             }
             System.out.println("----------");
         }
+        System.out.println("========================================");
 
         return success_gadgets;
     }
@@ -184,6 +196,8 @@ public class BruteGadget {
             }
         }
 
+        // 输出汇总结果
+        System.out.println("========================================");
         if (success_gadgets.isEmpty()) {
             String failMsg = "[FAIL]未发现有效回显链";
             System.out.println(Log.buffer_logging("FAIL", "未发现有效回显链"));
@@ -192,16 +206,18 @@ public class BruteGadget {
             }
         } else {
             String summaryMsg = "[SUCC]共发现" + success_gadgets.size() + "条有效回显链";
-            System.out.println(Log.buffer_logging("SUCC", "共发现" + success_gadgets.size() + "条有效回显链："));
+            System.out.println(Log.buffer_logging("SUCC", "共发现" + success_gadgets.size() + "条有效回显链"));
             System.out.println("----------");
             for (String success_gadget : success_gadgets) {
-                System.out.println(success_gadget);
+                String[] parts = success_gadget.split("\\+");
+                System.out.println(parts[0] + " + " + parts[1]);
             }
             System.out.println("----------");
             if (callback != null) {
                 callback.onProgress(summaryMsg);
             }
         }
+        System.out.println("========================================");
 
         return success_gadgets;
     }
@@ -298,6 +314,8 @@ public class BruteGadget {
             }
         }
 
+        // 输出汇总结果
+        System.out.println("========================================");
         if (success_gadgets.isEmpty()) {
             String failMsg = "[FAIL]未发现有效回显链";
             System.out.println(Log.buffer_logging("FAIL", "未发现有效回显链"));
@@ -306,16 +324,18 @@ public class BruteGadget {
             }
         } else {
             String summaryMsg = "[SUCC]共发现" + success_gadgets.size() + "条有效回显链";
-            System.out.println(Log.buffer_logging("SUCC", "共发现" + success_gadgets.size() + "条有效回显链："));
+            System.out.println(Log.buffer_logging("SUCC", "共发现" + success_gadgets.size() + "条有效回显链"));
             System.out.println("----------");
             for (String success_gadget : success_gadgets) {
-                System.out.println(success_gadget);
+                String[] parts = success_gadget.split("\\+");
+                System.out.println(parts[0] + " + " + parts[1]);
             }
             System.out.println("----------");
             if (callback != null) {
                 callback.onProgress(summaryMsg);
             }
         }
+        System.out.println("========================================");
 
         return success_gadgets;
     }
