@@ -49,7 +49,7 @@ public class AllList {
     /**
      * 内存马类型列表
      * 排序原则：
-     * 1. 按客户端工具分组 - AntSword/Behinder/Godzilla
+     * 1. 按客户端工具分组 - AntSword/Behinder/Godzilla/Suo5
      * 2. Filter 优先于 Servlet - Filter 拦截范围更广，更隐蔽
      */
     public static String[] memTypes = {
@@ -63,6 +63,36 @@ public class AllList {
 
         // ========== Godzilla (哥斯拉) ==========
         "GodzillaFilter",     // Filter 型 - 拦截所有请求，更隐蔽
-        "GodzillaServlet"     // Servlet 型 - 固定路径访问
+        "GodzillaServlet",    // Servlet 型 - 固定路径访问
+
+        // ========== Suo5 (全双工 TCP/HTTP 反向代理) ==========
+        "Suo5Servlet",        // Servlet 型 - 支持全双工代理、SSL 绕过
+
+        // ========== 自定义内存马 ==========
+        "自定义内存马"        // 用户自定义 Base64 字节码
+    };
+
+    /**
+     * 内存马备注信息列表
+     * 说明各内存马需要使用的参数，其他参数为工具内部传递使用
+     */
+    public static String[] memRemarks = {
+        // AntSword (中国蚁剑)
+        "使用 path、password",
+        "使用 path、password",
+
+        // Behinder (冰蝎)
+        "使用 path、password",
+        "使用 path、password",
+
+        // Godzilla (哥斯拉)
+        "使用 path、password",
+        "使用 path、password",
+
+        // Suo5 (全双工 TCP/HTTP 反向代理)
+        "使用 path、Header",
+
+        // 自定义内存马
+        "请自行验证"
     };
 }
