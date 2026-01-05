@@ -1,6 +1,7 @@
 package com.y5neko.shiroexp.ui.tabpane;
 
 import com.y5neko.shiroexp.config.GlobalVariable;
+import com.y5neko.shiroexp.misc.ConfigManager;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -66,6 +67,46 @@ public class SettingsTab {
 
         defaultProxyBox.getChildren().addAll(defaultProxyLabel, defaultProxyTextField, saveProxyButton);
 
+        // DNSLog 域名设置
+        HBox dnslogBox = new HBox();
+        dnslogBox.setAlignment(Pos.CENTER);
+        dnslogBox.setSpacing(10);
+
+        Label dnslogLabel = new Label("DNSLog 域名:");
+        TextField dnslogTextField = new TextField();
+        dnslogTextField.setPromptText("例: dnslog.cn");
+        dnslogTextField.setPrefWidth(200);
+
+        // 加载已保存的 DNSLog 配置
+        ConfigManager.loadConfig();
+        String currentDnslogDomain = ConfigManager.getDnslogDomain();
+        if (currentDnslogDomain != null && !currentDnslogDomain.isEmpty()) {
+            dnslogTextField.setText(currentDnslogDomain);
+        }
+
+        Button saveDnslogButton = new Button("保存");
+        saveDnslogButton.setOnAction(event -> {
+            String domain = dnslogTextField.getText().trim();
+
+            if (domain.isEmpty()) {
+                ConfigManager.clearDnslogDomain();
+                showAlert(Alert.AlertType.INFORMATION, "已清除", "DNSLog 域名已清除");
+                return;
+            }
+
+            // 简单的域名格式验证
+            if (!domain.matches("^[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
+                showAlert(Alert.AlertType.ERROR, "格式错误", "域名格式不正确\n正确格式：dnslog.cn 或 test.dnslog.cn");
+                return;
+            }
+
+            // 保存配置
+            ConfigManager.setDnslogDomain(domain);
+            showAlert(Alert.AlertType.INFORMATION, "保存成功", "DNSLog 域名已保存：\n" + domain + "\n\nDNSLog Echo 探测将使用此域名");
+        });
+
+        dnslogBox.getChildren().addAll(dnslogLabel, dnslogTextField, saveDnslogButton);
+
         // 超时设置
         HBox timeoutBox = new HBox();
         timeoutBox.setAlignment(Pos.CENTER);
@@ -88,7 +129,7 @@ public class SettingsTab {
 
         threadBox.getChildren().addAll(threadLabel, threadTextField);
 
-        generalSettingsContent.getChildren().addAll(defaultProxyBox, timeoutBox, threadBox);
+        generalSettingsContent.getChildren().addAll(defaultProxyBox, dnslogBox, timeoutBox, threadBox);
         generalSettingsPane.setContent(generalSettingsContent);
 
         // =========================== 外观设置 ==========================

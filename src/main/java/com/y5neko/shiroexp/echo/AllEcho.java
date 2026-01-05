@@ -2,7 +2,7 @@
  * Thanks to <b>summersec</b>
  * Source: https://github.com/SummerSec/ShiroAttack2/blob/master/src/main/java/com/summersec/attack/deser/echo/AllEcho.java
  */
-package com.y5neko.shiroexp.gadget;
+package com.y5neko.shiroexp.echo;
 
 import javassist.*;
 
