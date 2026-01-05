@@ -51,7 +51,6 @@ public class AllList {
      * 排序原则：
      * 1. 按客户端工具分组 - AntSword/Behinder/Godzilla
      * 2. Filter 优先于 Servlet - Filter 拦截范围更广，更隐蔽
-     * 3. 特殊类型放最后 - Suo5 为增强型内存马
      */
     public static String[] memTypes = {
         // ========== AntSword (中国蚁剑) ==========
@@ -64,9 +63,6 @@ public class AllList {
 
         // ========== Godzilla (哥斯拉) ==========
         "GodzillaFilter",     // Filter 型 - 拦截所有请求，更隐蔽
-        "GodzillaServlet",    // Servlet 型 - 固定路径访问
-
-        // ========== 特殊增强型 ==========
-        "Suo5TomcatFilter"    // Suo5 增强型 - 支持 HTTPS/内存马管理等功能
+        "GodzillaServlet"     // Servlet 型 - 固定路径访问
     };
 }
