@@ -1,5 +1,6 @@
 package com.y5neko.shiroexp.ui.common;
 
+import com.y5neko.shiroexp.copyright.Copyright;
 import com.y5neko.shiroexp.ui.event.Components;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -149,15 +150,17 @@ public class Header {
     private void showAboutDialog() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("关于 ShiroEXP");
-        alert.setHeaderText("ShiroEXP v2.0");
+        alert.setHeaderText(String.format("ShiroEXP %s", Copyright.version));
 
         String content = "Apache Shiro 漏洞利用工具\n\n" +
                 "功能特性:\n" +
-                "✓ Shiro550 Key 爆破\n" +
-                "✓ 回显链自动检测\n" +
-                "✓ 命令执行 & Shell 模式\n" +
-                "✓ 内存马注入\n" +
-                "✓ 全局代理支持\n\n" +
+                "- Shiro550\n" +
+                "- Shiro721\n" +
+                "- URLDNS依赖探测\n" +
+                "- 利用/回显链爆破\n" +
+                "- 命令执行\n" +
+                "- 内存马注入/自定义内存马\n" +
+                "- 全局代理\n\n" +
                 "作者: Y5neKO\n" +
                 "GitHub: https://github.com/Y5neKO\n\n" +
                 "免责声明:\n" +

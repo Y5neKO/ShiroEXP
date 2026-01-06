@@ -3,6 +3,8 @@ package com.y5neko.shiroexp.copyright;
 import com.y5neko.shiroexp.misc.Tools;
 
 public class Copyright {
+    public static final String version = "2.0";
+
      public static String logo = "\n" +
             "   _____    __      _                    ______   _  __    ____ \n" +
             "  / ___/   / /_    (_)   _____  ____    / ____/  | |/ /   / __ \\\n" +
@@ -13,6 +15,6 @@ public class Copyright {
             "                                                       GitHub: https://github.com/Y5neKO\n";
 
      public static String getLogo() {
-         return String.format(logo, Tools.color("1.0", "CYAN"), Tools.color("Y5neKO", "YELLOW"));
+         return String.format(logo, Tools.color(version, "CYAN"), Tools.color("Y5neKO", "YELLOW"));
      }
 }

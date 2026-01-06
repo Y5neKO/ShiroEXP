@@ -8,6 +8,7 @@ import com.y5neko.shiroexp.misc.Log;
 import com.y5neko.shiroexp.misc.Tools;
 import com.y5neko.shiroexp.object.TargetOBJ;
 import com.y5neko.shiroexp.request.HttpRequest;
+import com.y5neko.shiroexp.ui.dialog.DNSLogQuickCheckDialog;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -103,6 +104,7 @@ public class URLDNSTab {
         HBox classBox = new HBox();
         classBox.setAlignment(Pos.CENTER);
         classBox.setSpacing(10);
+        classBox.setPadding(new Insets(0, 0, 10, 0));
 
         Label classLabel = new Label("探测类:");
         ObservableList<String> classes = FXCollections.observableArrayList("探测所有类");
@@ -111,16 +113,26 @@ public class URLDNSTab {
         classComboBox.setValue("探测所有类");
         HBox.setHgrow(classComboBox, javafx.scene.layout.Priority.ALWAYS);
 
+        Button detectButton = new Button("开始探测");
+
+        classBox.getChildren().addAll(classLabel, classComboBox, detectButton);
+
+        // ========================== 第三行：DNSLog配置 ==========================
+        HBox dnslogConfigBox = new HBox();
+        dnslogConfigBox.setAlignment(Pos.CENTER);
+        dnslogConfigBox.setSpacing(10);
+        dnslogConfigBox.setPadding(new Insets(0, 0, 10, 0));
+
         Label dnslogDomainLabel = new Label("DNSLog域名:");
         TextField dnslogDomainTextField = new TextField();
         dnslogDomainTextField.setPromptText("留空使用设置中的域名或自动获取");
         HBox.setHgrow(dnslogDomainTextField, javafx.scene.layout.Priority.ALWAYS);
 
-        Button detectButton = new Button("开始探测");
+        Button quickCheckButton = new Button("DNSLog结果解析");
 
-        classBox.getChildren().addAll(classLabel, classComboBox, dnslogDomainLabel, dnslogDomainTextField, detectButton);
+        dnslogConfigBox.getChildren().addAll(dnslogDomainLabel, dnslogDomainTextField, quickCheckButton);
 
-        // ========================== 第三行：高级配置 ==========================
+        // ========================== 第四行：高级配置 ==========================
         TitledPane advancedConfigPane = new TitledPane();
         advancedConfigPane.setText("高级配置");
         advancedConfigPane.setCollapsible(true);
@@ -143,7 +155,7 @@ public class URLDNSTab {
         advancedConfigContent.getChildren().add(cookieBox);
         advancedConfigPane.setContent(advancedConfigContent);
 
-        // ========================== 第四行：日志区域 ==========================
+        // ========================== 第五行：日志区域 ==========================
         VBox logContainer = new VBox();
         logContainer.setSpacing(10);
         logContainer.setPadding(new Insets(10, 0, 0, 0));
@@ -169,6 +181,11 @@ public class URLDNSTab {
         VBox.setVgrow(logContainer, javafx.scene.layout.Priority.ALWAYS);
 
         // ========================== 事件绑定 ==========================
+        quickCheckButton.setOnAction(event -> {
+            DNSLogQuickCheckDialog dialog = new DNSLogQuickCheckDialog();
+            dialog.showAndWait();
+        });
+
         detectButton.setOnMouseClicked(event -> {
             // 验证输入
             if (targetUrlTextField.getText().trim().isEmpty()) {
@@ -388,7 +405,7 @@ public class URLDNSTab {
         });
 
         // ========================== 组装界面 ==========================
-        urlDnsTab.getChildren().addAll(targetUrlBox, rememberMeConfigBox, classBox, advancedConfigPane, logContainer);
+        urlDnsTab.getChildren().addAll(targetUrlBox, rememberMeConfigBox, classBox, dnslogConfigBox, advancedConfigPane, logContainer);
         return urlDnsTab;
     }
 
