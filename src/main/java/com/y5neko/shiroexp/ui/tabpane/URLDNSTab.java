@@ -37,6 +37,7 @@ public class URLDNSTab {
     private TextField rememberMeFlagTextField;
     private ComboBox<String> cryptTypeComboBox;
     private ComboBox<String> requestTypeComboBox;
+    private ComboBox<String> classComboBox; // 探测类下拉列表
 
     /**
      * 追加日志并自动滚动到底部的辅助方法
@@ -105,8 +106,8 @@ public class URLDNSTab {
 
         Label classLabel = new Label("探测类:");
         ObservableList<String> classes = FXCollections.observableArrayList("探测所有类");
-        classes.addAll(AllList.urlDnsClasses);
-        ComboBox<String> classComboBox = new ComboBox<>(classes);
+        classes.addAll(AllList.getAllUrlDnsClasses()); // 使用新方法获取完整列表
+        classComboBox = new ComboBox<>(classes);
         classComboBox.setValue("探测所有类");
         HBox.setHgrow(classComboBox, javafx.scene.layout.Priority.ALWAYS);
 
@@ -240,7 +241,8 @@ public class URLDNSTab {
                         // 确定要探测的类列表
                         java.util.List<String> classesToDetect = new java.util.ArrayList<>();
                         if ("探测所有类".equals(selectedClass)) {
-                            classesToDetect.addAll(java.util.Arrays.asList(AllList.urlDnsClasses));
+                            // 使用getAllUrlDnsClasses获取完整列表（包含自定义类）
+                            classesToDetect.addAll(AllList.getAllUrlDnsClasses());
                         } else {
                             classesToDetect.add(selectedClass);
                         }
@@ -472,5 +474,37 @@ public class URLDNSTab {
      */
     public static void updateFromShiro550Static(String targetUrl, String key, String rememberMeFlag) {
         updateFromShiro550Static(targetUrl, key, rememberMeFlag, null, null);
+    }
+
+    /**
+     * 静态方法：更新探测类下拉列表
+     * 在用户添加/删除自定义类后调用，实时更新UI
+     */
+    public static void updateClassList() {
+        if (instance == null || instance.classComboBox == null) {
+            return;
+        }
+
+        Platform.runLater(() -> {
+            // 获取最新的完整类列表
+            ObservableList<String> newClasses = AllList.getAllUrlDnsClasses();
+
+            // 保留"探测所有类"选项
+            ObservableList<String> updatedList = FXCollections.observableArrayList("探测所有类");
+            updatedList.addAll(newClasses);
+
+            // 保存当前选中的值
+            String previousValue = instance.classComboBox.getValue();
+
+            // 更新下拉列表
+            instance.classComboBox.setItems(updatedList);
+
+            // 智能恢复之前的选择
+            if (updatedList.contains(previousValue)) {
+                instance.classComboBox.setValue(previousValue);
+            } else {
+                instance.classComboBox.setValue("探测所有类");
+            }
+        });
     }
 }

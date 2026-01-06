@@ -1,12 +1,19 @@
 package com.y5neko.shiroexp.ui.tabpane;
 
 import com.y5neko.shiroexp.config.GlobalVariable;
+import com.y5neko.shiroexp.config.AllList;
 import com.y5neko.shiroexp.misc.ConfigManager;
+import com.y5neko.shiroexp.misc.ClassValidator;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 设置标签页
@@ -132,6 +139,113 @@ public class SettingsTab {
         generalSettingsContent.getChildren().addAll(defaultProxyBox, dnslogBox, timeoutBox, threadBox);
         generalSettingsPane.setContent(generalSettingsContent);
 
+        // =========================== 探测类设置 ===========================
+        TitledPane detectClassSettingsPane = new TitledPane();
+        detectClassSettingsPane.setText("探测类设置");
+        detectClassSettingsPane.setCollapsible(true);
+        detectClassSettingsPane.setExpanded(true);
+
+        VBox detectClassContent = new VBox();
+        detectClassContent.setSpacing(10);
+        detectClassContent.setPadding(new Insets(10));
+
+        // 说明文本
+        Label descriptionLabel = new Label("自定义需要探测的类名，一行一个。这些类将出现在FindClassByURLDNS功能的下拉列表中。");
+        descriptionLabel.setWrapText(true);
+        descriptionLabel.setStyle("-fx-text-fill: #666;");
+
+        // TextArea 输入框
+        TextArea customClassesTextArea = new TextArea();
+        customClassesTextArea.setPromptText("输入自定义类名，一行一个\n例如: com.example.CustomClass");
+        customClassesTextArea.setPrefRowCount(8);
+
+        // 加载已保存的自定义类
+        String[] savedClasses = ConfigManager.getCustomClasses();
+        if (savedClasses.length > 0) {
+            customClassesTextArea.setText(String.join("\n", savedClasses));
+        }
+
+        // 按钮和统计信息区域
+        HBox buttonBox = new HBox();
+        buttonBox.setAlignment(Pos.CENTER_LEFT);
+        buttonBox.setSpacing(15);
+
+        Button saveButton = new Button("保存自定义类");
+
+        Label statsLabel = new Label();
+        if (savedClasses.length > 0) {
+            statsLabel.setText("当前已保存 " + savedClasses.length + " 个自定义类");
+        }
+        statsLabel.setStyle("-fx-text-fill: #666;");
+
+        saveButton.setOnAction(event -> {
+            String text = customClassesTextArea.getText();
+            if (text == null || text.trim().isEmpty()) {
+                // 清空所有自定义类
+                ConfigManager.clearCustomClasses();
+                URLDNSTab.updateClassList();
+                showAlert(Alert.AlertType.INFORMATION, "保存成功", "已清除所有自定义类");
+                statsLabel.setText("当前已保存 0 个自定义类");
+                customClassesTextArea.clear(); // 清空输入框
+                return;
+            }
+
+            // 解析输入
+            List<String> inputLines = Arrays.stream(text.split("\n"))
+                .map(String::trim)
+                .filter(line -> !line.isEmpty())
+                .collect(Collectors.toList());
+
+            if (inputLines.isEmpty()) {
+                showAlert(Alert.AlertType.WARNING, "输入为空", "请输入至少一个类名");
+                return;
+            }
+
+            // 验证并去重
+            ClassValidator.ValidationResult result = ClassValidator.validateAndDeduplicate(inputLines);
+
+            // 保存去重后的列表
+            ConfigManager.setCustomClasses(result.getDeduplicatedArray());
+
+            // 同步到URLDNSTab
+            URLDNSTab.updateClassList();
+
+            // 显示结果
+            String message;
+            if (result.hasDuplicates()) {
+                message = String.format(
+                    "保存成功！\n\n新增: %d 个\n重复已移除: %d 个\n总计: %d 个\n\n重复项:\n%s",
+                    result.getAddedCount(),
+                    result.getDuplicateCount(),
+                    result.getTotalCount(),
+                    result.getDuplicateInfo()
+                );
+            } else {
+                message = String.format(
+                    "保存成功！\n\n新增: %d 个\n总计: %d 个",
+                    result.getAddedCount(),
+                    result.getTotalCount()
+                );
+            }
+
+            showAlert(Alert.AlertType.INFORMATION, "保存成功", message);
+            statsLabel.setText("当前已保存 " + result.getTotalCount() + " 个自定义类");
+
+            // 更新输入框为去重后的内容
+            customClassesTextArea.setText(String.join("\n", result.getDeduplicatedArray()));
+        });
+
+        // 清空按钮
+        Button clearButton = new Button("清空");
+        clearButton.setOnAction(event -> {
+            customClassesTextArea.clear();
+        });
+
+        buttonBox.getChildren().addAll(saveButton, clearButton, statsLabel);
+
+        detectClassContent.getChildren().addAll(descriptionLabel, customClassesTextArea, buttonBox);
+        detectClassSettingsPane.setContent(detectClassContent);
+
         // =========================== 外观设置 ==========================
         TitledPane appearancePane = new TitledPane();
         appearancePane.setText("外观设置");
@@ -179,7 +293,7 @@ public class SettingsTab {
         appearancePane.setContent(appearanceContent);
 
         // =========================== 添加所有组件 ==========================
-        settingsTab.getChildren().addAll(titleLabel, generalSettingsPane, appearancePane);
+        settingsTab.getChildren().addAll(titleLabel, generalSettingsPane, detectClassSettingsPane, appearancePane);
         return settingsTab;
     }
 

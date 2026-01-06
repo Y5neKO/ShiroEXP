@@ -1,5 +1,11 @@
 package com.y5neko.shiroexp.config;
 
+import com.y5neko.shiroexp.misc.ConfigManager;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
+import java.util.Arrays;
+
 public class AllList {
 
     /**
@@ -119,5 +125,52 @@ public class AllList {
     public static String getMemshellRemark(String memshellType) {
         String remark = MEMSHELL_INFO_MAP.get(memshellType);
         return remark != null ? remark : "该内存马参数需求未知";
+    }
+
+    // =========================== 自定义探测类支持 ===========================
+
+    /**
+     * 获取完整的探测类列表（预置 + 自定义）
+     * 用于FindClassByURLDNS功能，自动去重
+     *
+     * @return 包含所有预置类和自定义类的ObservableList
+     */
+    public static ObservableList<String> getAllUrlDnsClasses() {
+        ObservableList<String> allClasses = FXCollections.observableArrayList();
+
+        // 1. 添加预置类
+        allClasses.addAll(Arrays.asList(urlDnsClasses));
+
+        // 2. 重新加载配置文件以获取最新的自定义类
+        ConfigManager.loadConfig();
+
+        // 3. 添加用户自定义类（自动去重）
+        String[] customClasses = ConfigManager.getCustomClasses();
+        for (String customClass : customClasses) {
+            if (!allClasses.contains(customClass)) {
+                allClasses.add(customClass);
+            }
+        }
+
+        return allClasses;
+    }
+
+    /**
+     * 检查类名是否为预置类
+     * @param className 要检查的类名
+     * @return true if is predefined class
+     */
+    public static boolean isPredefinedClass(String className) {
+        if (className == null || className.trim().isEmpty()) {
+            return false;
+        }
+
+        String trimmed = className.trim();
+        for (String predefined : urlDnsClasses) {
+            if (predefined.equals(trimmed)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -97,4 +97,90 @@ public class ConfigManager {
         GlobalVariable.clearDnslogDomain();
         saveConfig();
     }
+
+    // =========================== 自定义探测类配置 ===========================
+
+    /**
+     * 获取自定义探测类列表
+     * @return 自定义类名数组
+     */
+    public static String[] getCustomClasses() {
+        String classesStr = props.getProperty("custom.classes");
+        if (classesStr == null || classesStr.trim().isEmpty()) {
+            return new String[0];
+        }
+
+        // 按逗号分割并去除空白
+        String[] classes = classesStr.split(",");
+        for (int i = 0; i < classes.length; i++) {
+            classes[i] = classes[i].trim();
+        }
+
+        return classes;
+    }
+
+    /**
+     * 设置自定义探测类列表
+     * @param classes 类名数组
+     */
+    public static void setCustomClasses(String[] classes) {
+        if (classes == null || classes.length == 0) {
+            props.remove("custom.classes");
+        } else {
+            // 去重并过滤空值
+            java.util.Set<String> uniqueClasses = new java.util.LinkedHashSet<>();
+            for (String cls : classes) {
+                if (cls != null && !cls.trim().isEmpty()) {
+                    uniqueClasses.add(cls.trim());
+                }
+            }
+
+            // 保存为逗号分隔的字符串
+            String classesStr = String.join(",", uniqueClasses);
+            props.setProperty("custom.classes", classesStr);
+        }
+
+        // 持久化到文件
+        saveConfig();
+    }
+
+    /**
+     * 添加单个自定义类
+     * @param className 类名
+     */
+    public static void addCustomClass(String className) {
+        if (className == null || className.trim().isEmpty()) {
+            return;
+        }
+
+        // 获取现有类列表
+        String[] existingClasses = getCustomClasses();
+        java.util.Set<String> classSet = new java.util.LinkedHashSet<>();
+        classSet.addAll(java.util.Arrays.asList(existingClasses));
+
+        // 添加新类（自动去重）
+        classSet.add(className.trim());
+
+        // 保存
+        setCustomClasses(classSet.toArray(new String[0]));
+    }
+
+    /**
+     * 清除所有自定义探测类配置
+     */
+    public static void clearCustomClasses() {
+        props.remove("custom.classes");
+        saveConfig();
+    }
+
+    /**
+     * 加载配置文件（扩展版 - 同步自定义类配置）
+     * 从 config/config.properties 读取配置并同步到 GlobalVariable
+     */
+    public static void loadConfigExtended() {
+        // 先执行原有加载逻辑
+        loadConfig();
+
+        // 自定义类配置已在 getCustomClasses() 中实时读取，无需额外同步
+    }
 }

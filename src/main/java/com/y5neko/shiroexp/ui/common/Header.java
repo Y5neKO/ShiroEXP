@@ -149,7 +149,7 @@ public class Header {
     private void showAboutDialog() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("关于 ShiroEXP");
-        alert.setHeaderText("ShiroEXP v0.2");
+        alert.setHeaderText("ShiroEXP v2.0");
 
         String content = "Apache Shiro 漏洞利用工具\n\n" +
                 "功能特性:\n" +
