@@ -36,9 +36,11 @@ public class URLDNSTab {
     private TextField targetUrlTextField;
     private TextField rememberMeTextField;
     private TextField rememberMeFlagTextField;
+    private TextField classFilterTextField; // 探测类过滤输入框
     private ComboBox<String> cryptTypeComboBox;
     private ComboBox<String> requestTypeComboBox;
     private ComboBox<String> classComboBox; // 探测类下拉列表
+    private ObservableList<String> allClasses; // 保存完整的类列表，用于过滤
 
     /**
      * 追加日志并自动滚动到底部的辅助方法
@@ -107,15 +109,29 @@ public class URLDNSTab {
         classBox.setPadding(new Insets(0, 0, 10, 0));
 
         Label classLabel = new Label("探测类:");
+
+        // 过滤输入框
+        classFilterTextField = new TextField();
+        classFilterTextField.setPromptText("输入过滤...");
+        classFilterTextField.setPrefWidth(150);
+
+        // 初始化完整类列表
         ObservableList<String> classes = FXCollections.observableArrayList("探测所有类");
-        classes.addAll(AllList.getAllUrlDnsClasses()); // 使用新方法获取完整列表
+        classes.addAll(AllList.getAllUrlDnsClasses());
+        allClasses = FXCollections.observableArrayList(classes); // 保存完整列表
+
         classComboBox = new ComboBox<>(classes);
         classComboBox.setValue("探测所有类");
         HBox.setHgrow(classComboBox, javafx.scene.layout.Priority.ALWAYS);
 
         Button detectButton = new Button("开始探测");
 
-        classBox.getChildren().addAll(classLabel, classComboBox, detectButton);
+        classBox.getChildren().addAll(classLabel, classFilterTextField, classComboBox, detectButton);
+
+        // 添加过滤功能
+        classFilterTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            filterClasses(newValue);
+        });
 
         // ========================== 第三行：DNSLog配置 ==========================
         HBox dnslogConfigBox = new HBox();
@@ -510,18 +526,70 @@ public class URLDNSTab {
             ObservableList<String> updatedList = FXCollections.observableArrayList("探测所有类");
             updatedList.addAll(newClasses);
 
+            // 更新完整类列表保存
+            instance.allClasses = FXCollections.observableArrayList(updatedList);
+
             // 保存当前选中的值
             String previousValue = instance.classComboBox.getValue();
 
-            // 更新下拉列表
-            instance.classComboBox.setItems(updatedList);
-
-            // 智能恢复之前的选择
-            if (updatedList.contains(previousValue)) {
-                instance.classComboBox.setValue(previousValue);
+            // 如果当前有过滤条件，需要重新应用过滤
+            String currentFilter = instance.classFilterTextField.getText();
+            if (currentFilter != null && !currentFilter.trim().isEmpty()) {
+                instance.filterClasses(currentFilter);
             } else {
-                instance.classComboBox.setValue("探测所有类");
+                // 更新下拉列表
+                instance.classComboBox.setItems(updatedList);
+
+                // 智能恢复之前的选择
+                if (updatedList.contains(previousValue)) {
+                    instance.classComboBox.setValue(previousValue);
+                } else {
+                    instance.classComboBox.setValue("探测所有类");
+                }
             }
         });
+    }
+
+    /**
+     * 根据输入过滤类列表
+     * @param filterText 过滤文本（大小写不敏感）
+     */
+    private void filterClasses(String filterText) {
+        if (filterText == null || filterText.trim().isEmpty()) {
+            // 无过滤条件，显示完整列表
+            classComboBox.setItems(allClasses);
+            // 保持"探测所有类"为默认选项
+            if (!allClasses.contains(classComboBox.getValue())) {
+                classComboBox.setValue("探测所有类");
+            }
+            return;
+        }
+
+        // 创建过滤后的列表（始终包含"探测所有类"）
+        ObservableList<String> filteredList = FXCollections.observableArrayList("探测所有类");
+        String lowerCaseFilter = filterText.toLowerCase();
+
+        // 遍历完整列表，添加匹配的类
+        for (String className : allClasses) {
+            if ("探测所有类".equals(className)) {
+                continue; // 跳过，已经添加到第一位
+            }
+
+            // 大小写不敏感的包含匹配
+            if (className.toLowerCase().contains(lowerCaseFilter)) {
+                filteredList.add(className);
+            }
+        }
+
+        // 更新下拉列表
+        String previousValue = classComboBox.getValue();
+        classComboBox.setItems(filteredList);
+
+        // 智能恢复选择：如果之前选择的类仍在过滤后的列表中，保持选中；否则选中"探测所有类"
+        if (filteredList.contains(previousValue)) {
+            classComboBox.setValue(previousValue);
+        } else {
+            classComboBox.setValue("探测所有类");
+        }
     }
 }
