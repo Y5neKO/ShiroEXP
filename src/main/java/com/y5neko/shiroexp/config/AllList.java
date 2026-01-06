@@ -44,6 +44,34 @@ public class AllList {
     };
 
     /**
+     * URLDNS 类探测列表
+     * 用于探测目标是否存在指定依赖类
+     *
+     * 注意：不能使用 java.lang 等受保护包名的类
+     */
+    public static String[] urlDnsClasses = {
+        // ========== CommonsCollections 系列 ==========
+        "org.apache.commons.collections.map.LazyMap",                     // CC1/CC3/CC6 核心类
+        "org.apache.commons.collections.Transformer",                     // CC 系列接口
+        "org.apache.commons.collections.functors.InvokerTransformer",     // CC1/CC3 核心利用类
+        "org.apache.commons.collections4.map.LazyMap",                    // CC4/CC7 核心类
+        "org.apache.commons.collections4.Transformer",                    // CC4 系列接口
+
+        // ========== CommonsBeanutils 系列 ==========
+        "org.apache.commons.beanutils.BeanComparator",                    // CB 系列核心类
+
+        // ========== 其他常见依赖 ==========
+        "com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl",     // TemplatesImpl 利用链
+        "org.springframework.transaction.interceptor.TransactionInterceptor", // Spring 利用链
+        "com.sun.org.apache.xalan.internal.xsltc.trax.TrAXFilter",         // TrAXFilter 利用类（CC3）
+        "org.apache.commons.collections.functors.ChainedTransformer",
+        "org.apache.commons.collections4.comparators.TransformingComparator",
+        "org.apache.commons.beanutils.BeanComparator",
+        "com.mchange.v2.c3p0.impl.PoolBackedDataSourceBase",
+        "com.mchange.v2.c3p0.test.AlwaysFailDataSource"
+    };
+
+    /**
      * 内存马配置映射
      * 排序原则：
      * 1. 按客户端工具分组 - AntSword/Behinder/Godzilla/Suo5

@@ -7,6 +7,7 @@ import com.y5neko.shiroexp.object.ResponseOBJ;
 import com.y5neko.shiroexp.object.TargetOBJ;
 import com.y5neko.shiroexp.request.HttpRequest;
 import com.y5neko.shiroexp.ui.tabpane.Shiro550Tab;
+import com.y5neko.shiroexp.ui.tabpane.URLDNSTab;
 import javafx.application.Platform;
 
 import javax.crypto.BadPaddingException;
@@ -127,8 +128,16 @@ public class BruteKey {
                 globalComponents.logArea.appendText("[SUCC]发现key: " + keyInfoObj.getKey() + "，类型为：" + keyInfoObj.getType() + "\n");
                 globalComponents.rememberMeField.setText(keyInfoObj.getKey());
                 globalComponents.cryptTypeComboBox.getSelectionModel().select(keyInfoObj.getType());
+
+                // 自动同步到 FindClassByURLDNS 标签页
+                globalComponents.logArea.appendText("========================================\n");
+                globalComponents.logArea.appendText("[提示] 配置已自动同步到「FindClassByURLDNS」标签页\n");
+                globalComponents.logArea.appendText("========================================\n\n");
             });
         }
+
+        // 调用 URLDNS 探测标签页的更新方法
+        URLDNSTab.updateFromShiro550Static(url.getUrl(), keyInfoObj.getKey(), rememberMeString);
 
         return keyInfoObj;
     }

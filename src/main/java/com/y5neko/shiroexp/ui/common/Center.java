@@ -4,6 +4,7 @@ import com.y5neko.shiroexp.ui.tabpane.ExploitTab;
 import com.y5neko.shiroexp.ui.tabpane.SettingsTab;
 import com.y5neko.shiroexp.ui.tabpane.Shiro550Tab;
 import com.y5neko.shiroexp.ui.tabpane.Shiro721Tab;
+import com.y5neko.shiroexp.ui.tabpane.URLDNSTab;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
@@ -30,6 +31,10 @@ public class Center {
         Tab shiro550Tab = new Tab("Shiro550");
         shiro550Tab.setContent(new Shiro550Tab().getShiro550Tab());
 
+        // FindClassByURLDNS标签页
+        Tab urlDnsTab = new Tab("FindClassByURLDNS");
+        urlDnsTab.setContent(new URLDNSTab().getURLDNSTab());
+
         // Shiro721标签页
         Tab shiro721Tab = new Tab("Shiro721");
         shiro721Tab.setContent(new Shiro721Tab().getShiro721Tab());
@@ -43,7 +48,7 @@ public class Center {
         settingsTab.setContent(new SettingsTab().getSettingsTab());
 
         // 添加到 TabPane
-        tabPane.getTabs().addAll(shiro550Tab, shiro721Tab, exploitTab, settingsTab);
+        tabPane.getTabs().addAll(shiro550Tab, urlDnsTab, shiro721Tab, exploitTab, settingsTab);
         // 禁止关闭标签
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         // 设置默认选中第一个标签页

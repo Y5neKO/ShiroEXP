@@ -26,6 +26,16 @@ public class Shiro550Tab {
     public ComboBox<String> cryptTypeComboBox;
     private TextField cookieTextField;
 
+    /**
+     * 追加日志并自动滚动到底部的辅助方法
+     * @param logTextArea 日志文本框
+     * @param text 要追加的文本
+     */
+    private void appendLogWithScroll(TextArea logTextArea, String text) {
+        logTextArea.appendText(text);
+        logTextArea.setScrollTop(Double.MAX_VALUE);
+    }
+
     public VBox getShiro550Tab(){
         VBox shiro550Tab = new VBox();
 
@@ -121,30 +131,34 @@ public class Shiro550Tab {
         advancedConfigPane.setContent(advancedConfigContent);
 
         // ================================第五行日志==================================
-        HBox logBox = new HBox();
-        logBox.setAlignment(Pos.CENTER);
-        logBox.setSpacing(10);
-        logBox.setPadding(new Insets(10, 0, 0, 0));
+        VBox logContainer = new VBox();
+        logContainer.setSpacing(10);
+        logContainer.setPadding(new Insets(10, 0, 0, 0));
+        logContainer.setFillWidth(true);
 
         TextArea logTextArea = new TextArea();
         logTextArea.setEditable(false);
-        logTextArea.setPrefHeight(100);
+        logTextArea.setWrapText(true);
 
-        logBox.getChildren().add(logTextArea);
-        HBox.setHgrow(logTextArea, javafx.scene.layout.Priority.ALWAYS);
-        VBox.setVgrow(logBox, javafx.scene.layout.Priority.ALWAYS);
+        logContainer.getChildren().add(logTextArea);
+
+        // 关键：让 TextArea 在 logContainer 中占据所有剩余垂直空间
+        VBox.setVgrow(logTextArea, javafx.scene.layout.Priority.ALWAYS);
+
+        // 关键：让 logContainer 在主 VBox (shiro550Tab) 中占据所有剩余垂直空间
+        VBox.setVgrow(logContainer, javafx.scene.layout.Priority.ALWAYS);
 
         // =============================处理一些绑定事件==========================================
         checkRememberMeButton.setOnMouseClicked(event -> {
             checkRememberMeButton.setDisable(true);
             // 在这里添加检测rememberMe的逻辑
             if (targetUrlTextField.getText().isEmpty()) {
-                logTextArea.appendText("请输入目标地址\n");
+                appendLogWithScroll(logTextArea, "请输入目标地址\n");
                 checkRememberMeButton.setDisable(false);
                 return;
             }
             if (rememberMeKeywordTextField.getText().isEmpty()) {
-                logTextArea.appendText("请输入rememberMe关键字\n");
+                appendLogWithScroll(logTextArea, "请输入rememberMe关键字\n");
                 checkRememberMeButton.setDisable(false);
             } else {
                 // 传递需要后续操作的组件到POJO类
@@ -167,9 +181,9 @@ public class Shiro550Tab {
                         } catch (Exception e) {
                             final String errorMsg = e.getMessage();
                             javafx.application.Platform.runLater(() -> {
-                                logTextArea.appendText("[EROR]" + (errorMsg != null && !errorMsg.isEmpty() ? errorMsg : "rememberMe 检测失败") + "\n");
+                                appendLogWithScroll(logTextArea, "[EROR]" + (errorMsg != null && !errorMsg.isEmpty() ? errorMsg : "rememberMe 检测失败") + "\n");
                                 if (errorMsg == null || errorMsg.isEmpty()) {
-                                    logTextArea.appendText("[DEBUG] " + e.getClass().getSimpleName() + "\n");
+                                    appendLogWithScroll(logTextArea, "[DEBUG] " + e.getClass().getSimpleName() + "\n");
                                 }
                             });
                         }
@@ -193,11 +207,11 @@ public class Shiro550Tab {
         checkGadgetsButton.setOnMouseClicked(event -> {
             // 验证必填项
             if (targetUrlTextField.getText().isEmpty()) {
-                logTextArea.appendText("[EROR]请先输入目标地址\n");
+                appendLogWithScroll(logTextArea, "[EROR]请先输入目标地址\n");
                 return;
             }
             if (rememberMeValueTextField.getText().isEmpty()) {
-                logTextArea.appendText("[EROR]请先完成 Key 检测\n");
+                appendLogWithScroll(logTextArea, "[EROR]请先完成 Key 检测\n");
                 return;
             }
 
@@ -226,7 +240,7 @@ public class Shiro550Tab {
             }
 
             checkGadgetsButton.setDisable(true);
-            logTextArea.appendText("[INFO]正在检测回显链...\n");
+            appendLogWithScroll(logTextArea, "[INFO]正在检测回显链...\n");
 
             // 异步执行检测任务
             Task<Void> task = new Task<Void>() {
@@ -267,15 +281,15 @@ public class Shiro550Tab {
                         // 更新 UI
                         javafx.application.Platform.runLater(() -> {
                             // 输出汇总结果
-                            logTextArea.appendText("========================================\n");
+                            appendLogWithScroll(logTextArea, "========================================\n");
                             if (!validGadgets.isEmpty()) {
-                                logTextArea.appendText("[SUCC]共发现" + validGadgets.size() + "条有效回显链\n");
-                                logTextArea.appendText("----------\n");
+                                appendLogWithScroll(logTextArea, "[SUCC]共发现" + validGadgets.size() + "条有效回显链\n");
+                                appendLogWithScroll(logTextArea, "----------\n");
                                 for (String validGadget : validGadgets) {
                                     String[] parts = validGadget.split("\\+");
-                                    logTextArea.appendText(parts[0] + " + " + parts[1] + "\n");
+                                    appendLogWithScroll(logTextArea, parts[0] + " + " + parts[1] + "\n");
                                 }
-                                logTextArea.appendText("----------\n");
+                                appendLogWithScroll(logTextArea, "----------\n");
 
                                 // 自动选择第一个有效的回显链
                                 String firstValid = validGadgets.get(0);
@@ -298,28 +312,28 @@ public class Shiro550Tab {
                                     }
 
                                     // 提示用户
-                                    logTextArea.appendText("\n");
-                                    logTextArea.appendText("========================================\n");
-                                    logTextArea.appendText("[提示] 配置已自动同步到「漏洞利用」标签页\n");
-                                    logTextArea.appendText("[提示] 请切换到「漏洞利用」标签页进行命令执行和内存马注入\n");
-                                    logTextArea.appendText("========================================\n\n");
+                                    appendLogWithScroll(logTextArea, "\n");
+                                    appendLogWithScroll(logTextArea, "========================================\n");
+                                    appendLogWithScroll(logTextArea, "[提示] 配置已自动同步到「漏洞利用」标签页\n");
+                                    appendLogWithScroll(logTextArea, "[提示] 请切换到「漏洞利用」标签页进行命令执行和内存马注入\n");
+                                    appendLogWithScroll(logTextArea, "========================================\n\n");
 
                                     // 自动更新漏洞利用标签页的配置
                                     ExploitTab.updateFromConfigStatic();
                                 }
                             } else {
-                                logTextArea.appendText("[FAIL]未发现有效回显链\n");
+                                appendLogWithScroll(logTextArea, "[FAIL]未发现有效回显链\n");
                             }
-                            logTextArea.appendText("========================================\n");
+                            appendLogWithScroll(logTextArea, "========================================\n");
                         });
 
                     } catch (Exception e) {
                         final String errorMsg = e.getMessage();
                         javafx.application.Platform.runLater(() -> {
-                            logTextArea.appendText("[EROR]" + (errorMsg != null ? errorMsg : "操作失败，请检查配置") + "\n");
+                            appendLogWithScroll(logTextArea, "[EROR]" + (errorMsg != null ? errorMsg : "操作失败，请检查配置") + "\n");
                             // 详细错误信息（调试用）
                             if (errorMsg == null || errorMsg.isEmpty()) {
-                                logTextArea.appendText("[DEBUG] " + e.getClass().getSimpleName() + "\n");
+                                appendLogWithScroll(logTextArea, "[DEBUG] " + e.getClass().getSimpleName() + "\n");
                             }
                         });
                     }
@@ -344,7 +358,7 @@ public class Shiro550Tab {
         });
 
         // =============================最后添加所有的VBox到shiro550Tab===========================
-        shiro550Tab.getChildren().addAll(targetUrlBox, rememberMeBox, exploitEchoChainBox, advancedConfigPane, logBox);
+        shiro550Tab.getChildren().addAll(targetUrlBox, rememberMeBox, exploitEchoChainBox, advancedConfigPane, logContainer);
         return shiro550Tab;
     }
 
