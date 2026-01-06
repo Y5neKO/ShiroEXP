@@ -26,6 +26,10 @@ public class Shiro550Tab {
     public ComboBox<String> cryptTypeComboBox;
     private TextField cookieTextField;
 
+    // 停止爆破标志和当前Task
+    private volatile boolean stopBruteForce = false;
+    private javafx.concurrent.Task<Void> currentBruteTask = null;
+
     /**
      * 追加日志并自动滚动到底部的辅助方法
      * @param logTextArea 日志文本框
@@ -70,14 +74,14 @@ public class Shiro550Tab {
         HBox.setHgrow(rememberMeValueTextField, javafx.scene.layout.Priority.ALWAYS);
 
         Label cryptTypeLabel = new Label("加密方式: ");
-        ObservableList<String> cryptType = FXCollections.observableArrayList("CBC", "GCM");
+        ObservableList<String> cryptType = FXCollections.observableArrayList("爆破所有", "CBC", "GCM");
         cryptTypeComboBox = new ComboBox<>(cryptType);
-        cryptTypeComboBox.setValue("CBC");
+        cryptTypeComboBox.setValue("爆破所有");
         Tooltip tooltip = new Tooltip();
-        tooltip.setText("Shiro1.4.2版本后,Shiro的加密模式\n由AES-CBC变为AES-GCM");
+        tooltip.setText("Shiro1.4.2版本后,Shiro的加密模式\n由AES-CBC变为AES-GCM\n\n爆破所有: 同时尝试CBC和GCM模式");
         Tooltip.install(cryptTypeComboBox, tooltip);
 
-        Button checkRememberMeButton = new Button("检测rememberMe");
+        final Button checkRememberMeButton = new Button("检测rememberMe");
 
         rememberMeBox.getChildren().addAll(rememberMeKeywordLabel, rememberMeKeywordTextField, rememberMeValueLabel, rememberMeValueTextField, cryptTypeLabel, cryptTypeComboBox, checkRememberMeButton);
 
@@ -150,58 +154,87 @@ public class Shiro550Tab {
 
         // =============================处理一些绑定事件==========================================
         checkRememberMeButton.setOnMouseClicked(event -> {
-            checkRememberMeButton.setDisable(true);
-            // 在这里添加检测rememberMe的逻辑
+            // 判断当前是检测还是停止
+            if ("停止检测".equals(checkRememberMeButton.getText())) {
+                // 执行停止操作
+                stopBruteForce = true;
+                if (currentBruteTask != null) {
+                    currentBruteTask.cancel();
+                }
+                appendLogWithScroll(logTextArea, "[INFO]用户中断检测\n");
+                return;
+            }
+
+            // 验证输入
             if (targetUrlTextField.getText().isEmpty()) {
                 appendLogWithScroll(logTextArea, "请输入目标地址\n");
-                checkRememberMeButton.setDisable(false);
                 return;
             }
             if (rememberMeKeywordTextField.getText().isEmpty()) {
                 appendLogWithScroll(logTextArea, "请输入rememberMe关键字\n");
-                checkRememberMeButton.setDisable(false);
-            } else {
-                // 传递需要后续操作的组件到POJO类
-                GlobalComponents globalComponents = new GlobalComponents(
-                        rememberMeValueTextField, exploitChainComboBox,
-                        echoGadgetsComboBox, logTextArea, cryptTypeComboBox
-                );
-                // 添加到线程池中执行，防止阻塞UI线程
-                Task<Void> task = new Task<Void>() {
-                    @Override
-                    protected Void call() {
-                        try {
-                            TargetOBJ targetOBJ = new TargetOBJ(targetUrlTextField.getText());
-                            targetOBJ.setRememberMeFlag(rememberMeValueTextField.getText());
-
-                            // 应用高级配置（Cookie）
-                            applyAdvancedConfig(targetOBJ, cookieTextField);
-
-                            BruteKey.bruteKey(targetOBJ, globalComponents);
-                        } catch (Exception e) {
-                            final String errorMsg = e.getMessage();
-                            javafx.application.Platform.runLater(() -> {
-                                appendLogWithScroll(logTextArea, "[EROR]" + (errorMsg != null && !errorMsg.isEmpty() ? errorMsg : "rememberMe 检测失败") + "\n");
-                                if (errorMsg == null || errorMsg.isEmpty()) {
-                                    appendLogWithScroll(logTextArea, "[DEBUG] " + e.getClass().getSimpleName() + "\n");
-                                }
-                            });
-                        }
-                        return null;
-                    }
-
-                    @Override
-                    protected void succeeded() {
-                        checkRememberMeButton.setDisable(false);
-                    }
-
-                    @Override
-                    protected void failed() {
-                        checkRememberMeButton.setDisable(false);
-                    }
-                };
-                new Thread(task).start();
+                return;
             }
+
+            // 切换按钮到停止状态
+            checkRememberMeButton.setText("停止检测");
+            stopBruteForce = false;
+
+            // 传递需要后续操作的组件到POJO类
+            final GlobalComponents globalComponents = new GlobalComponents(
+                    rememberMeValueTextField, exploitChainComboBox,
+                    echoGadgetsComboBox, logTextArea, cryptTypeComboBox, requestTypeComboBox, checkRememberMeButton, stopBruteForce
+            );
+
+            // 添加到线程池中执行，防止阻塞UI线程
+            currentBruteTask = new Task<Void>() {
+                @Override
+                protected Void call() {
+                    try {
+                        TargetOBJ targetOBJ = new TargetOBJ(targetUrlTextField.getText());
+                        targetOBJ.setRememberMeFlag(rememberMeValueTextField.getText());
+
+                        // 应用高级配置（Cookie）
+                        applyAdvancedConfig(targetOBJ, cookieTextField);
+
+                        // 获取加密方式选择
+                        String selectedCryptType = cryptTypeComboBox.getValue();
+
+                        // 调用爆破方法，传递加密模式参数
+                        BruteKey.bruteKey(targetOBJ, globalComponents, selectedCryptType);
+                    } catch (Exception e) {
+                        final String errorMsg = e.getMessage();
+                        javafx.application.Platform.runLater(() -> {
+                            appendLogWithScroll(logTextArea, "[EROR]" + (errorMsg != null && !errorMsg.isEmpty() ? errorMsg : "rememberMe 检测失败") + "\n");
+                            if (errorMsg == null || errorMsg.isEmpty()) {
+                                appendLogWithScroll(logTextArea, "[DEBUG] " + e.getClass().getSimpleName() + "\n");
+                            }
+                        });
+                    }
+                    return null;
+                }
+
+                @Override
+                protected void succeeded() {
+                    // 恢复按钮状态
+                    checkRememberMeButton.setText("检测rememberMe");
+                    currentBruteTask = null;
+                }
+
+                @Override
+                protected void failed() {
+                    // 恢复按钮状态
+                    checkRememberMeButton.setText("检测rememberMe");
+                    currentBruteTask = null;
+                }
+
+                @Override
+                protected void cancelled() {
+                    // 恢复按钮状态
+                    checkRememberMeButton.setText("检测rememberMe");
+                    currentBruteTask = null;
+                }
+            };
+            new Thread(currentBruteTask).start();
         });
 
         checkGadgetsButton.setOnMouseClicked(event -> {
@@ -305,6 +338,8 @@ public class Shiro550Tab {
                                     config.setGadget(parts[0]);
                                     config.setEcho(parts[1]);
                                     config.setCryptType(cryptTypeComboBox.getValue());
+                                    config.setRememberMeFlag(rememberMeKeywordTextField.getText().trim());
+                                    config.setRequestType(requestTypeComboBox.getValue());
 
                                     // 应用高级配置到全局配置
                                     if (cookieTextField != null && !cookieTextField.getText().trim().isEmpty()) {
@@ -382,15 +417,22 @@ public class Shiro550Tab {
         public ComboBox<String> echoGadgetsComboBox;
         public TextArea logArea;
         public ComboBox<String> cryptTypeComboBox;
+        public ComboBox<String> requestTypeComboBox;
+        public Button checkRememberMeButton;
+        public volatile boolean stopFlag;
 
         public GlobalComponents(TextField rememberMeField, ComboBox<String> exploitChainComboBox,
                                 ComboBox<String> echoGadgetsComboBox, TextArea logArea,
-                                ComboBox<String> cryptTypeComboBox) {
+                                ComboBox<String> cryptTypeComboBox, ComboBox<String> requestTypeComboBox,
+                                Button checkRememberMeButton, boolean stopFlag) {
             this.rememberMeField = rememberMeField;
             this.exploitChainComboBox = exploitChainComboBox;
             this.echoGadgetsComboBox = echoGadgetsComboBox;
             this.logArea = logArea;
             this.cryptTypeComboBox = cryptTypeComboBox;
+            this.requestTypeComboBox = requestTypeComboBox;
+            this.checkRememberMeButton = checkRememberMeButton;
+            this.stopFlag = stopFlag;
         }
     }
 }

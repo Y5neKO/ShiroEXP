@@ -8,8 +8,10 @@ import java.util.Map;
  */
 public class TargetOBJ {
     private String url;
+    private String requestType = "GET";  // 请求方式：GET 或 POST
     private String rememberMeFlag = "rememberMe";
     private String key = "kPH+bIxk5D2deZiIxcaaaA==";
+    private String cryptType = "CBC";    // 加密模式：CBC 或 GCM
     private Map<String, String> cookie = new HashMap<>();
     private Map<String, String> headers = new HashMap<>();
     private String gadget;
@@ -68,6 +70,14 @@ public class TargetOBJ {
         this.url = url;
     }
 
+    public String getRequestType() {
+        return requestType;
+    }
+
+    public void setRequestType(String requestType) {
+        this.requestType = requestType;
+    }
+
     public String getRememberMeFlag() {
         return rememberMeFlag;
     }
@@ -82,6 +92,14 @@ public class TargetOBJ {
 
     public void setKey(String key) {
         this.key = key;
+    }
+
+    public String getCryptType() {
+        return cryptType;
+    }
+
+    public void setCryptType(String cryptType) {
+        this.cryptType = cryptType;
     }
 
     public void resetHeaders(){

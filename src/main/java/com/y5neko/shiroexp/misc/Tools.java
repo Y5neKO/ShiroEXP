@@ -239,6 +239,22 @@ public class Tools {
     }
 
     /**
+     * 根据加密模式自动选择加密方式
+     * @param key AES密钥
+     * @param data 需要加密的数据
+     * @param cryptType 加密模式（"CBC" 或 "GCM"）
+     * @return 加密后的数据
+     */
+    public static String encryptByType(String key, String data, String cryptType) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+        if ("GCM".equalsIgnoreCase(cryptType)) {
+            return GCM_Encrypt(key, data);
+        } else {
+            // 默认使用 CBC
+            return CBC_Encrypt(key, data);
+        }
+    }
+
+    /**
      * 生成随机字符串
      * @param length 字符串长度
      * @return 随机字符串
