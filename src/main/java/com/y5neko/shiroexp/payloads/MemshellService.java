@@ -97,7 +97,8 @@ public class MemshellService {
         // 统一生成随机header值，由内存马自己决定是否使用
         String headerName = generateRandomString(8);
         String headerValue = generateRandomString(16);
-        return injectMemshellInternal(targetOBJ, customBase64, "自定义内存马", path, password, gadget, headerName, headerValue, "该内存马参数需求取决于自定义字节码的实现");
+        String remark = getMemshellRemark("自定义内存马");
+        return injectMemshellInternal(targetOBJ, customBase64, "自定义内存马", path, password, gadget, headerName, headerValue, remark);
     }
 
     /**
@@ -176,7 +177,7 @@ public class MemshellService {
         if (responseStr.contains("Success")) {
             return new InjectResult(true, "内存马注入成功", responseStr, memshellType, memshellPath, password, responseHeaderName, responseHeaderValue, remark);
         } else {
-            return new InjectResult(false, "内存马注入失败：响应中未找到 Success 标记（不一定真的失败，可能是回显错误，建议手动尝试连接）", responseStr, memshellType, memshellPath, password, responseHeaderName, responseHeaderValue, remark);
+            return new InjectResult(false, "内存马注入失败：响应中未找到 Success 标记\n（不一定注入失败，可能只是回显有问题，可以手动尝试连接）", responseStr, memshellType, memshellPath, password, responseHeaderName, responseHeaderValue, remark);
         }
     }
 
@@ -186,20 +187,7 @@ public class MemshellService {
      * @return 备注信息
      */
     private static String getMemshellRemark(String memshellType) {
-        try {
-            com.y5neko.shiroexp.config.AllList allList = new com.y5neko.shiroexp.config.AllList();
-            String[] types = allList.memTypes;
-            String[] remarks = allList.memRemarks;
-
-            for (int i = 0; i < types.length; i++) {
-                if (types[i].equals(memshellType)) {
-                    return remarks[i];
-                }
-            }
-        } catch (Exception e) {
-            // 忽略异常
-        }
-        return "该内存马参数需求未知";
+        return com.y5neko.shiroexp.config.AllList.getMemshellRemark(memshellType);
     }
 
     /**

