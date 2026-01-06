@@ -391,6 +391,7 @@ public class URLDNSTab {
                             appendLogWithScroll(logTextArea, "----------\n");
                             appendLogWithScroll(logTextArea, "[提示]请访问 DNSLog 平台查看 DNS 记录\n");
                             appendLogWithScroll(logTextArea, "[提示]如果看到某条 DNS 记录，说明目标存在该类\n");
+                            appendLogWithScroll(logTextArea, "[提示]请复制dnslog完整结果到DNSLog结果解析工具进行解析\n");
                             appendLogWithScroll(logTextArea, "========================================\n");
                         });
 
