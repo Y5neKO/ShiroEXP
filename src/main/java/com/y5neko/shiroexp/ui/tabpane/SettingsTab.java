@@ -3,17 +3,11 @@ package com.y5neko.shiroexp.ui.tabpane;
 import com.y5neko.shiroexp.config.GlobalVariable;
 import com.y5neko.shiroexp.config.AllList;
 import com.y5neko.shiroexp.misc.ConfigManager;
-import com.y5neko.shiroexp.misc.ClassValidator;
-import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 设置标签页
@@ -150,19 +144,19 @@ public class SettingsTab {
         detectClassContent.setPadding(new Insets(10));
 
         // 说明文本
-        Label descriptionLabel = new Label("自定义需要探测的类名，一行一个。这些类将出现在FindClassByURLDNS功能的下拉列表中。");
+        Label descriptionLabel = new Label("自定义需要探测的类名，一行一个");
         descriptionLabel.setWrapText(true);
         descriptionLabel.setStyle("-fx-text-fill: #666;");
 
         // TextArea 输入框
         TextArea customClassesTextArea = new TextArea();
-        customClassesTextArea.setPromptText("输入自定义类名，一行一个\n例如: com.example.CustomClass");
+        customClassesTextArea.setPromptText("输入自定义类名，一行一个\n例如: com.example.CustomClass\n以#开头的行会被视为注释");
         customClassesTextArea.setPrefRowCount(8);
 
-        // 加载已保存的自定义类
-        String[] savedClasses = ConfigManager.getCustomClasses();
-        if (savedClasses.length > 0) {
-            customClassesTextArea.setText(String.join("\n", savedClasses));
+        // 加载已保存的自定义类（包含注释）
+        String savedContent = ConfigManager.getCustomClassesRaw();
+        if (!savedContent.isEmpty()) {
+            customClassesTextArea.setText(savedContent);
         }
 
         // 按钮和统计信息区域
@@ -173,6 +167,7 @@ public class SettingsTab {
         Button saveButton = new Button("保存自定义类");
 
         Label statsLabel = new Label();
+        String[] savedClasses = ConfigManager.getCustomClasses();
         if (savedClasses.length > 0) {
             statsLabel.setText("当前已保存 " + savedClasses.length + " 个自定义类");
         }
@@ -190,49 +185,50 @@ public class SettingsTab {
                 return;
             }
 
-            // 解析输入
-            List<String> inputLines = Arrays.stream(text.split("\n"))
-                .map(String::trim)
-                .filter(line -> !line.isEmpty())
-                .collect(Collectors.toList());
+            // 去除空行，保留注释和有效类
+            String[] lines = text.split("\n");
+            StringBuilder filteredContent = new StringBuilder();
+            int validCount = 0;
+            int commentCount = 0;
+            int emptyCount = 0;
 
-            if (inputLines.isEmpty()) {
-                showAlert(Alert.AlertType.WARNING, "输入为空", "请输入至少一个类名");
-                return;
+            for (String line : lines) {
+                String trimmed = line.trim();
+                if (trimmed.isEmpty()) {
+                    emptyCount++;
+                    continue; // 跳过空行
+                }
+
+                // 添加到过滤后的内容
+                if (filteredContent.length() > 0) {
+                    filteredContent.append("\n");
+                }
+                filteredContent.append(trimmed);
+
+                // 统计
+                if (trimmed.startsWith("#")) {
+                    commentCount++;
+                } else {
+                    validCount++;
+                }
             }
 
-            // 验证并去重
-            ClassValidator.ValidationResult result = ClassValidator.validateAndDeduplicate(inputLines);
-
-            // 保存去重后的列表
-            ConfigManager.setCustomClasses(result.getDeduplicatedArray());
+            // 保存过滤后的内容
+            String finalContent = filteredContent.toString();
+            ConfigManager.setCustomClasses(finalContent);
 
             // 同步到URLDNSTab
             URLDNSTab.updateClassList();
 
-            // 显示结果
-            String message;
-            if (result.hasDuplicates()) {
-                message = String.format(
-                    "保存成功！\n\n新增: %d 个\n重复已移除: %d 个\n总计: %d 个\n\n重复项:\n%s",
-                    result.getAddedCount(),
-                    result.getDuplicateCount(),
-                    result.getTotalCount(),
-                    result.getDuplicateInfo()
-                );
-            } else {
-                message = String.format(
-                    "保存成功！\n\n新增: %d 个\n总计: %d 个",
-                    result.getAddedCount(),
-                    result.getTotalCount()
-                );
-            }
+            // 更新输入框（去除空行后）
+            customClassesTextArea.setText(finalContent);
 
-            showAlert(Alert.AlertType.INFORMATION, "保存成功", message);
-            statsLabel.setText("当前已保存 " + result.getTotalCount() + " 个自定义类");
-
-            // 更新输入框为去重后的内容
-            customClassesTextArea.setText(String.join("\n", result.getDeduplicatedArray()));
+            showAlert(Alert.AlertType.INFORMATION, "保存成功",
+                String.format("已保存 %d 个自定义类，%d 行注释%s",
+                    validCount,
+                    commentCount,
+                    emptyCount > 0 ? String.format("，已去除 %d 个空行", emptyCount) : ""));
+            statsLabel.setText("当前已保存 " + validCount + " 个自定义类");
         });
 
         // 清空按钮

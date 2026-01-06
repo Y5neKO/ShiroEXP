@@ -101,7 +101,7 @@ public class ConfigManager {
     // =========================== 自定义探测类配置 ===========================
 
     /**
-     * 获取自定义探测类列表
+     * 获取自定义探测类列表（不包含注释）
      * @return 自定义类名数组
      */
     public static String[] getCustomClasses() {
@@ -110,34 +110,57 @@ public class ConfigManager {
             return new String[0];
         }
 
-        // 按逗号分割并去除空白
-        String[] classes = classesStr.split(",");
-        for (int i = 0; i < classes.length; i++) {
-            classes[i] = classes[i].trim();
+        // 使用 Pattern.quote() 对分隔符进行转义，避免被当作正则表达式
+        String delimiter = "|||";
+        String[] lines = classesStr.split(java.util.regex.Pattern.quote(delimiter));
+        java.util.List<String> classes = new java.util.ArrayList<>();
+
+        for (String line : lines) {
+            String trimmed = line.trim();
+            // 跳过空行和注释行
+            if (!trimmed.isEmpty() && !trimmed.startsWith("#")) {
+                classes.add(trimmed);
+            }
         }
 
-        return classes;
+        return classes.toArray(new String[0]);
     }
 
     /**
-     * 设置自定义探测类列表
-     * @param classes 类名数组
+     * 获取自定义探测类的原始内容（包含注释）
+     * 用于在UI中显示完整内容
+     * @return 原始内容（多行字符串）
      */
-    public static void setCustomClasses(String[] classes) {
-        if (classes == null || classes.length == 0) {
+    public static String getCustomClassesRaw() {
+        String classesStr = props.getProperty("custom.classes");
+        if (classesStr == null || classesStr.trim().isEmpty()) {
+            return "";
+        }
+
+        // 将分隔符替换为换行符（使用 literal 替换，不需要转义）
+        String delimiter = "|||";
+        StringBuilder result = new StringBuilder();
+        String[] parts = classesStr.split(java.util.regex.Pattern.quote(delimiter));
+        for (int i = 0; i < parts.length; i++) {
+            if (i > 0) {
+                result.append("\n");
+            }
+            result.append(parts[i]);
+        }
+        return result.toString();
+    }
+
+    /**
+     * 设置自定义探测类列表（支持注释）
+     * @param content 多行内容（包含注释和类名）
+     */
+    public static void setCustomClasses(String content) {
+        if (content == null || content.trim().isEmpty()) {
             props.remove("custom.classes");
         } else {
-            // 去重并过滤空值
-            java.util.Set<String> uniqueClasses = new java.util.LinkedHashSet<>();
-            for (String cls : classes) {
-                if (cls != null && !cls.trim().isEmpty()) {
-                    uniqueClasses.add(cls.trim());
-                }
-            }
-
-            // 保存为逗号分隔的字符串
-            String classesStr = String.join(",", uniqueClasses);
-            props.setProperty("custom.classes", classesStr);
+            // 将换行符替换为特殊的分隔符（三个竖线）
+            String escapedContent = content.replace("\n", "|||");
+            props.setProperty("custom.classes", escapedContent);
         }
 
         // 持久化到文件
@@ -153,16 +176,21 @@ public class ConfigManager {
             return;
         }
 
-        // 获取现有类列表
-        String[] existingClasses = getCustomClasses();
-        java.util.Set<String> classSet = new java.util.LinkedHashSet<>();
-        classSet.addAll(java.util.Arrays.asList(existingClasses));
+        // 获取现有内容
+        StringBuilder content = new StringBuilder();
+        String existingContent = getCustomClassesRaw();
+        if (!existingContent.isEmpty()) {
+            content.append(existingContent);
+            if (!existingContent.endsWith("\n")) {
+                content.append("\n");
+            }
+        }
 
-        // 添加新类（自动去重）
-        classSet.add(className.trim());
+        // 添加新类（自动去重由UI层处理）
+        content.append(className.trim());
 
         // 保存
-        setCustomClasses(classSet.toArray(new String[0]));
+        setCustomClasses(content.toString());
     }
 
     /**
