@@ -206,9 +206,10 @@ public class BruteKey {
             });
         }
 
-        // 调用 URLDNS 探测标签页的更新方法（包含加密模式和请求方式）
+        // 调用 URLDNS 探测标签页的更新方法（包含加密模式、请求方式和Cookie）
         String requestType = globalComponents.requestTypeComboBox != null ? globalComponents.requestTypeComboBox.getValue() : "GET";
-        URLDNSTab.updateFromShiro550Static(url.getUrl(), keyInfoObj.getKey(), rememberMeString, keyInfoObj.getType(), requestType);
+        String cookie = globalComponents.cookieField != null ? globalComponents.cookieField.getText() : null;
+        URLDNSTab.updateFromShiro550Static(url.getUrl(), keyInfoObj.getKey(), rememberMeString, keyInfoObj.getType(), requestType, cookie);
 
         return keyInfoObj;
     }

@@ -434,6 +434,19 @@ public class URLDNSTab {
      * @param requestType 请求方式
      */
     public void updateFromShiro550(String targetUrl, String key, String rememberMeFlag, String cryptType, String requestType) {
+        updateFromShiro550(targetUrl, key, rememberMeFlag, cryptType, requestType, null);
+    }
+
+    /**
+     * 从 Shiro550 Tab 更新配置（公共方法，包含Cookie）
+     * @param targetUrl 目标地址
+     * @param key RememberMe Key
+     * @param rememberMeFlag RememberMe Cookie名称
+     * @param cryptType 加密模式
+     * @param requestType 请求方式
+     * @param cookie Cookie值
+     */
+    public void updateFromShiro550(String targetUrl, String key, String rememberMeFlag, String cryptType, String requestType, String cookie) {
         if (targetUrlTextField != null && !targetUrl.trim().isEmpty()) {
             targetUrlTextField.setText(targetUrl);
         }
@@ -448,6 +461,9 @@ public class URLDNSTab {
         }
         if (requestTypeComboBox != null && requestType != null && !requestType.trim().isEmpty()) {
             requestTypeComboBox.setValue(requestType);
+        }
+        if (cookieTextField != null && cookie != null && !cookie.trim().isEmpty()) {
+            cookieTextField.setText(cookie);
         }
     }
 
@@ -481,9 +497,22 @@ public class URLDNSTab {
      * @param requestType 请求方式
      */
     public static void updateFromShiro550Static(String targetUrl, String key, String rememberMeFlag, String cryptType, String requestType) {
+        updateFromShiro550Static(targetUrl, key, rememberMeFlag, cryptType, requestType, null);
+    }
+
+    /**
+     * 静态方法：更新当前实例的配置（包含所有参数和Cookie）
+     * @param targetUrl 目标地址
+     * @param key RememberMe Key
+     * @param rememberMeFlag RememberMe Cookie名称
+     * @param cryptType 加密模式
+     * @param requestType 请求方式
+     * @param cookie Cookie值
+     */
+    public static void updateFromShiro550Static(String targetUrl, String key, String rememberMeFlag, String cryptType, String requestType, String cookie) {
         if (instance != null) {
             javafx.application.Platform.runLater(() -> {
-                instance.updateFromShiro550(targetUrl, key, rememberMeFlag, cryptType, requestType);
+                instance.updateFromShiro550(targetUrl, key, rememberMeFlag, cryptType, requestType, cookie);
             });
         }
     }

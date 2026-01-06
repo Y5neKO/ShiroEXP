@@ -182,7 +182,7 @@ public class Shiro550Tab {
             // 传递需要后续操作的组件到POJO类
             final GlobalComponents globalComponents = new GlobalComponents(
                     rememberMeValueTextField, exploitChainComboBox,
-                    echoGadgetsComboBox, logTextArea, cryptTypeComboBox, requestTypeComboBox, checkRememberMeButton, stopBruteForce
+                    echoGadgetsComboBox, logTextArea, cryptTypeComboBox, requestTypeComboBox, checkRememberMeButton, cookieTextField, stopBruteForce
             );
 
             // 添加到线程池中执行，防止阻塞UI线程
@@ -419,12 +419,13 @@ public class Shiro550Tab {
         public ComboBox<String> cryptTypeComboBox;
         public ComboBox<String> requestTypeComboBox;
         public Button checkRememberMeButton;
+        public TextField cookieField;
         public volatile boolean stopFlag;
 
         public GlobalComponents(TextField rememberMeField, ComboBox<String> exploitChainComboBox,
                                 ComboBox<String> echoGadgetsComboBox, TextArea logArea,
                                 ComboBox<String> cryptTypeComboBox, ComboBox<String> requestTypeComboBox,
-                                Button checkRememberMeButton, boolean stopFlag) {
+                                Button checkRememberMeButton, TextField cookieField, boolean stopFlag) {
             this.rememberMeField = rememberMeField;
             this.exploitChainComboBox = exploitChainComboBox;
             this.echoGadgetsComboBox = echoGadgetsComboBox;
@@ -432,6 +433,7 @@ public class Shiro550Tab {
             this.cryptTypeComboBox = cryptTypeComboBox;
             this.requestTypeComboBox = requestTypeComboBox;
             this.checkRememberMeButton = checkRememberMeButton;
+            this.cookieField = cookieField;
             this.stopFlag = stopFlag;
         }
     }

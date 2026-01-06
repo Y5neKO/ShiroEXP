@@ -242,54 +242,8 @@ public class SettingsTab {
         detectClassContent.getChildren().addAll(descriptionLabel, customClassesTextArea, buttonBox);
         detectClassSettingsPane.setContent(detectClassContent);
 
-        // =========================== 外观设置 ==========================
-        TitledPane appearancePane = new TitledPane();
-        appearancePane.setText("外观设置");
-        appearancePane.setCollapsible(true);
-        appearancePane.setExpanded(false);
-
-        VBox appearanceContent = new VBox();
-        appearanceContent.setSpacing(10);
-        appearanceContent.setPadding(new Insets(10));
-
-        // 主题选择
-        HBox themeBox = new HBox();
-        themeBox.setAlignment(Pos.CENTER);
-        themeBox.setSpacing(10);
-
-        Label themeLabel = new Label("主题: ");
-        ComboBox<String> themeComboBox = new ComboBox<>();
-        themeComboBox.getItems().addAll("浅色", "深色");
-        themeComboBox.setValue("浅色");
-        themeComboBox.setPromptText("选择主题");
-
-        Button applyThemeButton = new Button("应用");
-        applyThemeButton.setOnAction(event -> {
-            showAlert(Alert.AlertType.INFORMATION, "主题切换", "主题切换功能暂不支持");
-        });
-
-        themeBox.getChildren().addAll(themeLabel, themeComboBox, applyThemeButton);
-
-        // 字体大小
-        HBox fontSizeBox = new HBox();
-        fontSizeBox.setAlignment(Pos.CENTER);
-        fontSizeBox.setSpacing(10);
-
-        Label fontSizeLabel = new Label("字体大小: ");
-        Slider fontSizeSlider = new Slider(10, 20, 12);
-        fontSizeSlider.setShowTickLabels(true);
-        fontSizeSlider.setShowTickMarks(true);
-        fontSizeSlider.setMajorTickUnit(2);
-        fontSizeSlider.setMinorTickCount(1);
-        fontSizeSlider.setSnapToTicks(true);
-
-        fontSizeBox.getChildren().addAll(fontSizeLabel, fontSizeSlider);
-
-        appearanceContent.getChildren().addAll(themeBox, fontSizeBox);
-        appearancePane.setContent(appearanceContent);
-
         // =========================== 添加所有组件 ==========================
-        settingsTab.getChildren().addAll(titleLabel, generalSettingsPane, detectClassSettingsPane, appearancePane);
+        settingsTab.getChildren().addAll(titleLabel, generalSettingsPane, detectClassSettingsPane);
         return settingsTab;
     }
 
