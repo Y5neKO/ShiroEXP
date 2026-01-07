@@ -14,6 +14,7 @@ public class HttpRequestInfo {
     private String requestMethod;
     private String requestURL;
     private String rememberMeCookie;  // 存储为十六进制字符串
+    private String rememberMeCookieName = "rememberMe";  // Cookie 名称，默认为 rememberMe
     private String requestBody;
     private Map<String, String> headers = new HashMap<>();
     private String original;
@@ -57,6 +58,14 @@ public class HttpRequestInfo {
         }
     }
 
+    public String getRememberMeCookieName() {
+        return rememberMeCookieName;
+    }
+
+    public void setRememberMeCookieName(String rememberMeCookieName) {
+        this.rememberMeCookieName = rememberMeCookieName;
+    }
+
     public String getRequestBody() {
         return requestBody;
     }
@@ -78,6 +87,7 @@ public class HttpRequestInfo {
         return "HttpRequestInfo{" +
                 "requestMethod='" + requestMethod + '\'' +
                 ", requestURL='" + requestURL + '\'' +
+                ", rememberMeCookieName='" + rememberMeCookieName + '\'' +
                 ", rememberMeCookie='" + rememberMeCookie + '\'' +
                 ", requestBody='" + requestBody + '\'' +
                 ", headers=" + headers +

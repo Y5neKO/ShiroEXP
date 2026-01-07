@@ -1,8 +1,11 @@
 package com.y5neko.shiroexp.ui.tabpane;
 
 import com.y5neko.shiroexp.misc.Shiro721AttackTask;
+import com.y5neko.shiroexp.util.HttpRequest;
 import com.y5neko.shiroexp.util.HttpRequestInfo;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -22,7 +25,9 @@ import java.nio.file.Files;
  */
 public class Shiro721Tab {
     private TextField targetUrlTextField;
+    private ComboBox<String> requestTypeComboBox;
     private TextField cookieTextField;
+    private TextField keywordTextField;
     private TextField payloadFileTextField;
     private TextField threadCountTextField;
     private TextArea logTextArea;
@@ -96,7 +101,12 @@ public class Shiro721Tab {
         targetUrlTextField.setPromptText("http://example.com");
         HBox.setHgrow(targetUrlTextField, javafx.scene.layout.Priority.ALWAYS);
 
-        box.getChildren().addAll(targetUrlLabel, targetUrlTextField);
+        Label requestTypeLabel = new Label("请求方式:");
+        ObservableList<String> requestType = FXCollections.observableArrayList("GET", "POST");
+        requestTypeComboBox = new ComboBox<>(requestType);
+        requestTypeComboBox.setValue("GET");
+
+        box.getChildren().addAll(targetUrlLabel, targetUrlTextField, requestTypeLabel, requestTypeComboBox);
         return box;
     }
 
@@ -108,17 +118,21 @@ public class Shiro721Tab {
         box.setAlignment(Pos.CENTER);
         box.setSpacing(10);
 
-        Label cookieLabel = new Label("有效 Cookie:");
+        Label cookieLabel = new Label("有效 rememberMe:");
         cookieLabel.setMinWidth(80);
 
         cookieTextField = new TextField();
-        cookieTextField.setPromptText("完整的 rememberMe Cookie 值（Base64 编码）");
+        cookieTextField.setPromptText("完整的 rememberMe");
         HBox.setHgrow(cookieTextField, javafx.scene.layout.Priority.ALWAYS);
+
+        Label keywordLabel = new Label("Keyword:");
+        keywordTextField = new TextField("rememberMe");
+        keywordTextField.setPrefWidth(100);
 
         Button testCookieButton = new Button("测试 Cookie");
         testCookieButton.setOnAction(event -> handleTestCookie());
 
-        box.getChildren().addAll(cookieLabel, cookieTextField, testCookieButton);
+        box.getChildren().addAll(cookieLabel, cookieTextField, keywordLabel, keywordTextField, testCookieButton);
         return box;
     }
 
@@ -202,7 +216,7 @@ public class Shiro721Tab {
         progressBar.setProgress(0);
         progressBar.setPrefWidth(Double.MAX_VALUE);
 
-        progressLabel = new Label("准备就绪");
+        progressLabel = new Label("");
         progressLabel.setStyle("-fx-font-size: 12px;");
 
         box.getChildren().addAll(progressBar, progressLabel);
@@ -275,6 +289,7 @@ public class Shiro721Tab {
     private void handleTestCookie() {
         String url = targetUrlTextField.getText().trim();
         String cookie = cookieTextField.getText().trim();
+        String keyword = keywordTextField.getText().trim();
 
         if (url.isEmpty()) {
             appendLog("[ERROR] 请输入目标地址", "ERROR");
@@ -282,16 +297,67 @@ public class Shiro721Tab {
         }
 
         if (cookie.isEmpty()) {
-            appendLog("[ERROR] 请输入有效 Cookie", "ERROR");
+            appendLog("[ERROR] 请输入有效 rememberMe", "ERROR");
             return;
         }
 
-        appendLog("[INFO] 正在测试 Cookie 有效性...", "INFO");
+        appendLog("[INFO] ========== 开始测试 Cookie 有效性 ==========", "INFO");
         appendLog("[INFO] 目标: " + url, "INFO");
+        appendLog("[INFO] 请求方式: " + requestTypeComboBox.getValue(), "INFO");
+        appendLog("[INFO] RememberMe 关键词: " + keyword, "INFO");
         appendLog("[INFO] Cookie 长度: " + cookie.length() + " 字符", "INFO");
 
-        // TODO: 实现实际的 Cookie 验证逻辑
-        appendLog("[SUCCESS] Cookie 格式验证通过（功能待实现）", "SUCCESS");
+        // 禁用测试按钮，防止重复点击
+        Button testButton = (Button) cookieTextField.getParent().getChildrenUnmodifiable().stream()
+                .filter(node -> node instanceof Button && ((Button) node).getText().equals("测试 Cookie"))
+                .findFirst()
+                .orElse(null);
+
+        if (testButton != null) {
+            testButton.setDisable(true);
+        }
+
+        // 在后台线程中执行测试
+        Thread testThread = new Thread(() -> {
+            try {
+                // 创建 HTTP 请求信息
+                HttpRequestInfo requestInfo = new HttpRequestInfo();
+                requestInfo.setRequestURL(url);
+                requestInfo.setRequestMethod(requestTypeComboBox.getValue());
+                requestInfo.setRememberMeCookieName(keyword);
+
+                // 测试 Cookie 有效性
+                boolean isValid = HttpRequest.testCookieValidity(requestInfo, cookie);
+
+                // 更新 UI
+                Platform.runLater(() -> {
+                    if (isValid) {
+                        appendLog("[SUCCESS] Cookie 有效性测试: 有效 ✓", "SUCCESS");
+                        appendLog("[INFO] 响应包中未发现 " + keyword + "=deleteMe", "INFO");
+                    } else {
+                        appendLog("[ERROR] Cookie 有效性测试: 无效 ✗", "ERROR");
+                        appendLog("[WARN] 响应包中发现 " + keyword + "=deleteMe，Cookie 可能已被篡改或已过期", "WARN");
+                    }
+                    appendLog("[INFO] ========== 测试完成 ==========", "INFO");
+
+                    // 重新启用测试按钮
+                    if (testButton != null) {
+                        testButton.setDisable(false);
+                    }
+                });
+
+            } catch (Exception e) {
+                Platform.runLater(() -> {
+                    appendLog("[ERROR] 测试失败: " + e.getMessage(), "ERROR");
+                    if (testButton != null) {
+                        testButton.setDisable(false);
+                    }
+                });
+            }
+        });
+
+        testThread.setDaemon(true);
+        testThread.start();
     }
 
     /**
@@ -350,8 +416,9 @@ public class Shiro721Tab {
             // 创建 HTTP 请求信息
             HttpRequestInfo requestInfo = new HttpRequestInfo();
             requestInfo.setRequestURL(targetUrlTextField.getText().trim());
-            requestInfo.setRequestMethod("GET");
+            requestInfo.setRequestMethod(requestTypeComboBox.getValue());
             requestInfo.setRememberMeCookie(cookieTextField.getText().trim());
+            requestInfo.setRememberMeCookieName(keywordTextField.getText().trim());
 
             // 获取线程数
             int threadCount = Integer.parseInt(threadCountTextField.getText().trim());
@@ -534,7 +601,9 @@ public class Shiro721Tab {
      */
     private void setInputsEnabled(boolean enabled) {
         targetUrlTextField.setDisable(!enabled);
+        requestTypeComboBox.setDisable(!enabled);
         cookieTextField.setDisable(!enabled);
+        keywordTextField.setDisable(!enabled);
         payloadFileTextField.setDisable(!enabled);
         threadCountTextField.setDisable(!enabled);
         startButton.setDisable(!enabled);
