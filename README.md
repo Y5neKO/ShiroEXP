@@ -4,7 +4,7 @@ Shiro漏洞综合利用工具
 
 ## Environment
 
-`JDK 8u431` | `Intellij 2024`
+`JDK 8u431` | `Intellij 2025`
 
 > ⚠️ _使用其他JDK版本可能出现未知的错误_
 
