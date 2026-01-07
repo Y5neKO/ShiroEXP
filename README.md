@@ -1,87 +1,58 @@
 # ShiroEXP
 
-Shiro漏洞利用工具
+Shiro漏洞综合利用工具
 
 ## Environment
 
-`JDK 8u421` | `Intellij 2024`
+`JDK 8u431` | `Intellij 2024`
 
 > ⚠️ _使用其他JDK版本可能出现未知的错误_
 
-## TODO
+## Features
 
-- 爆破key及加密方式(已完成)
-- 漏洞探测(已完成Shiro550 URLDNS探测)
-- 探测回显链(已完成CB1+TomcatEcho、Spring、AllEcho回显链)
-- 漏洞利用(已完成命令执行、Shell模式)
-- 注入内存马(支持蚁剑、冰蝎、哥斯拉等filter、servlet类型)
-- 全局代理(已完成)
+- 爆破rememberMe
+- 漏洞探测(Shiro550、Shiro721)
+- 探测回显链
+- 探测依赖（FindClassByURLDNS、FindClassByBomb）
+- 命令执行
+- 注入内存马
+- 全局代理
 
 ## Help
-```zsh
-➜  ShiroEXP_jar git:(main) ✗ java -jar ShiroEXP.jar -h
-
-   _____    __      _                    ______   _  __    ____ 
-  / ___/   / /_    (_)   _____  ____    / ____/  | |/ /   / __ \
-  \__ \   / __ \  / /   / ___/ / __ \  / __/     |   /   / /_/ /
- ___/ /  / / / / / /   / /    / /_/ / / /___    /   |   / ____/ 
-/____/  /_/ /_/ /_/   /_/     \____/ /_____/   /_/|_|  /_/      
-                                                       v0.2 by Y5neKO :)
-                                                       GitHub: https://github.com/Y5neKO
-
-usage: java ShiroEXP.jar [-be] [-bk] [-c <arg>] [--cookie <arg>] [--gadget
-       <arg>] [--gadget-echo <arg>] [-h] [-k <arg>] [--mem-pass <arg>]
-       [--mem-path <arg>] [--mem-type <arg>] [--proxy <arg>] [-rf <arg>]
-       [-s] [--shell] [-u <arg>]
- -be,--brute-echo              爆破回显链
- -bk,--brute-key               爆破key
- -c,--cmd <arg>                执行命令
-    --cookie <arg>             携带Cookie
-    --gadget <arg>             指定利用链
-    --gadget-echo <arg>        指定回显链
- -h,--help                     打印帮助
- -k,--key <arg>                指定key
-    --mem-pass <arg>           内存马密码
-    --mem-path <arg>           内存马路径
-    --mem-type <arg>           打入内存马类型(输入ls查看可用类型)
-    --proxy <arg>              设置代理(ip:port)
- -rf,--rememberme-flag <arg>   自定义rememberMe字段名
- -s,--scan                     扫描漏洞
-    --shell                    进入Shell模式
- -u,--url <arg>                目标地址
-```
 
 ## Demonstrate
 
-**爆破key及加密方式**
+### Shiro550
 
-![brutekey.png](img/brutekey.png)
+![img.png](img/img.png)
 
-**漏洞验证**
+### Shiro721
 
-![Shiro550scan.png](img/Shiro550scan.png)
+![img_1.png](img/img_1.png)
 
-**爆破回显链**
+### FindClassByURLDNS
 
-![bruteecho.png](img/bruteecho.png)
+![img_2.png](img/img_2.png)
 
-**命令执行**
+自定义探测类
 
-![commandexcute.png](img/commandexcute.png)
+![img_3.png](img/img_3.png)
 
-**Shell模式**
+### FindClassByBomb
 
-![shellmode.png](img/shellmode.png)
+![img_4.png](img/img_4.png)
 
-**注入内存马**
+### 命令执行
 
-![injectmemshell.png](img/injectmemshell.png)
+![img_5.png](img/img_5.png)
 
-![injectmemshell1.png](img/injectmemshell1.png)
+### 内存马注入
 
-**全局代理**
+![img_6.png](img/img_6.png)
 
-![proxy.png](img/proxy.png)
+自定义内存马
+
+![img_7.png](img/img_7.png)
 
 ## Build
 
@@ -93,6 +64,10 @@ usage: java ShiroEXP.jar [-be] [-bk] [-c <arg>] [--cookie <arg>] [--gadget
 @frohoff   https://github.com/frohoff/ysoserial
 
 @SummerSec  https://github.com/SummerSec/ShiroAttack2
+
+@c0ny1 https://github.com/woodpecker-framework/ysoserial-for-woodpecker
+
+@feihong-cs https://github.com/feihong-cs/ShiroExploit-Deprecated
 
 ## Warnning
 
