@@ -1,4 +1,4 @@
-package com.y5neko.shiroexp.util;
+package com.y5neko.shiroexp.request.shiro721;
 
 import javax.net.ssl.*;
 import java.io.*;

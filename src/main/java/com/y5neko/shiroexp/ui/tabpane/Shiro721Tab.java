@@ -1,8 +1,8 @@
 package com.y5neko.shiroexp.ui.tabpane;
 
 import com.y5neko.shiroexp.misc.Shiro721AttackTask;
-import com.y5neko.shiroexp.util.HttpRequest;
-import com.y5neko.shiroexp.util.HttpRequestInfo;
+import com.y5neko.shiroexp.request.shiro721.HttpRequest;
+import com.y5neko.shiroexp.request.shiro721.HttpRequestInfo;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -144,11 +144,11 @@ public class Shiro721Tab {
         box.setAlignment(Pos.CENTER);
         box.setSpacing(10);
 
-        Label payloadLabel = new Label("Payload 文件:");
+        Label payloadLabel = new Label("反序列化Payload:");
         payloadLabel.setMinWidth(80);
 
         payloadFileTextField = new TextField();
-        payloadFileTextField.setPromptText("选择 Payload 文件");
+        payloadFileTextField.setPromptText("选择Payload文件，推荐使用ysoserial生成，首次测试不建议使用文件过大的payload，会影响测试时间");
         payloadFileTextField.setEditable(false);
         HBox.setHgrow(payloadFileTextField, javafx.scene.layout.Priority.ALWAYS);
 
@@ -332,11 +332,11 @@ public class Shiro721Tab {
                 // 更新 UI
                 Platform.runLater(() -> {
                     if (isValid) {
-                        appendLog("[SUCCESS] Cookie 有效性测试: 有效 ✓", "SUCCESS");
+                        appendLog("[SUCCESS] 有效", "SUCCESS");
                         appendLog("[INFO] 响应包中未发现 " + keyword + "=deleteMe", "INFO");
                     } else {
-                        appendLog("[ERROR] Cookie 有效性测试: 无效 ✗", "ERROR");
-                        appendLog("[WARN] 响应包中发现 " + keyword + "=deleteMe，Cookie 可能已被篡改或已过期", "WARN");
+                        appendLog("[ERROR] 无效", "ERROR");
+                        appendLog("[WARN] 响应包中发现 " + keyword + "=deleteMe，Cookie 可能已过期", "WARN");
                     }
                     appendLog("[INFO] ========== 测试完成 ==========", "INFO");
 
@@ -437,8 +437,8 @@ public class Shiro721Tab {
                     resultTextArea.setText(result);
                     TitledPane resultPane = (TitledPane) resultTextArea.getParent().getParent().getParent();
                     resultPane.setExpanded(true);
-                    appendLog("[SUCCESS] ========== 攻击成功完成！===========", "SUCCESS");
-                    appendLog("[INFO] 生成的恶意 Cookie 已显示在结果区域", "INFO");
+                    appendLog("[SUCCESS] ========== 攻击成功 ===========", "SUCCESS");
+                    appendLog("[INFO] 已生成的恶意 rememberMe，复制发包即可", "INFO");
                 }
                 setInputsEnabled(true);
                 progressBar.progressProperty().unbind();
@@ -568,7 +568,7 @@ public class Shiro721Tab {
         }
 
         if (cookie.isEmpty()) {
-            appendLog("[ERROR] 请输入有效 Cookie", "ERROR");
+            appendLog("[ERROR] 请输入有效 rememberMe", "ERROR");
             return false;
         }
 

@@ -1,7 +1,6 @@
 package com.y5neko.shiroexp.misc;
 
-import com.y5neko.shiroexp.util.ExploitFailedException;
-import com.y5neko.shiroexp.util.HttpRequestInfo;
+import com.y5neko.shiroexp.request.shiro721.HttpRequestInfo;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 
@@ -81,9 +80,9 @@ public class Shiro721AttackTask extends Task<String> {
             @Override
             public void onVulnCheckComplete(boolean vulnerable) {
                 if (vulnerable) {
-                    updateMessageSafe("✓ 目标存在漏洞！");
+                    updateMessageSafe("[+] 目标存在漏洞！");
                 } else {
-                    updateMessageSafe("✗ 目标不存在漏洞");
+                    updateMessageSafe("[-] 目标不存在漏洞");
                 }
             }
 
@@ -119,13 +118,13 @@ public class Shiro721AttackTask extends Task<String> {
             @Override
             public void onAttackComplete(String result) {
                 currentProgress.set(1.0);
-                updateProgressAndMessageSafe(1.0, "攻击完成！");
-                updateMessageSafe("✓ 攻击成功完成");
+                updateProgressAndMessageSafe(1.0, "攻击完");
+                updateMessageSafe("攻击成功完成");
             }
 
             @Override
             public void onAttackFailed(String error) {
-                updateMessageSafe("✗ 攻击失败: " + error);
+                updateMessageSafe("攻击失败: " + error);
             }
 
             @Override

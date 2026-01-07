@@ -1,9 +1,8 @@
 package com.y5neko.shiroexp.misc;
 
-import com.y5neko.shiroexp.util.HttpRequestInfo;
-import com.y5neko.shiroexp.util.ExploitFailedException;
-import com.y5neko.shiroexp.util.HttpRequest;
-import com.y5neko.shiroexp.util.Shiro721Tools;
+import com.y5neko.shiroexp.request.shiro721.HttpRequestInfo;
+import com.y5neko.shiroexp.misc.exception.ExploitFailedException;
+import com.y5neko.shiroexp.request.shiro721.HttpRequest;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Base64;

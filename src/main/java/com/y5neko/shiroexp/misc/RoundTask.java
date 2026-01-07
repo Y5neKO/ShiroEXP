@@ -1,8 +1,7 @@
 package com.y5neko.shiroexp.misc;
 
-import com.y5neko.shiroexp.util.HttpRequest;
-import com.y5neko.shiroexp.util.HttpRequestInfo;
-import com.y5neko.shiroexp.util.Shiro721Tools;
+import com.y5neko.shiroexp.request.shiro721.HttpRequest;
+import com.y5neko.shiroexp.request.shiro721.HttpRequestInfo;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;

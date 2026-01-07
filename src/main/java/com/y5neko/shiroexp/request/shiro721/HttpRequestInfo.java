@@ -1,4 +1,4 @@
-package com.y5neko.shiroexp.util;
+package com.y5neko.shiroexp.request.shiro721;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;

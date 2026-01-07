@@ -1,4 +1,4 @@
-package com.y5neko.shiroexp.util;
+package com.y5neko.shiroexp.misc;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Base64;
