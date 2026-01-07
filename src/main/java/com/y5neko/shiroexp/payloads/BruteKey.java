@@ -6,6 +6,7 @@ import com.y5neko.shiroexp.object.KeyInfoObj;
 import com.y5neko.shiroexp.object.ResponseOBJ;
 import com.y5neko.shiroexp.object.TargetOBJ;
 import com.y5neko.shiroexp.request.HttpRequest;
+import com.y5neko.shiroexp.ui.tabpane.FindClassByBombTab;
 import com.y5neko.shiroexp.ui.tabpane.Shiro550Tab;
 import com.y5neko.shiroexp.ui.tabpane.URLDNSTab;
 import javafx.application.Platform;
@@ -201,6 +202,10 @@ public class BruteKey {
             }
         }
 
+        // 获取请求参数
+        String requestType = globalComponents.requestTypeComboBox != null ? globalComponents.requestTypeComboBox.getValue() : "GET";
+        String cookie = globalComponents.cookieField != null ? globalComponents.cookieField.getText() : null;
+
         // 处理前端显示
         if (globalComponents.logArea != null) {
             Platform.runLater(() -> {
@@ -210,15 +215,16 @@ public class BruteKey {
 
                 // 自动同步到 FindClassByURLDNS 标签页
                 appendLogWithScroll(globalComponents.logArea, "========================================\n");
-                appendLogWithScroll(globalComponents.logArea, "[提示] 配置已自动同步到「FindClassByURLDNS」标签页\n");
+                appendLogWithScroll(globalComponents.logArea, "配置已同步到FindClass功能，可进行依赖探测\n");
                 appendLogWithScroll(globalComponents.logArea, "========================================\n\n");
             });
         }
 
         // 调用 URLDNS 探测标签页的更新方法（包含加密模式、请求方式和Cookie）
-        String requestType = globalComponents.requestTypeComboBox != null ? globalComponents.requestTypeComboBox.getValue() : "GET";
-        String cookie = globalComponents.cookieField != null ? globalComponents.cookieField.getText() : null;
         URLDNSTab.updateFromShiro550Static(url.getUrl(), keyInfoObj.getKey(), rememberMeString, keyInfoObj.getType(), requestType, cookie);
+
+        // 调用 FindClassByBomb 探测标签页的更新方法（包含加密模式、请求方式和Cookie）
+        FindClassByBombTab.updateFromShiro550Static(url.getUrl(), keyInfoObj.getKey(), rememberMeString, keyInfoObj.getType(), requestType, cookie);
 
         return keyInfoObj;
     }

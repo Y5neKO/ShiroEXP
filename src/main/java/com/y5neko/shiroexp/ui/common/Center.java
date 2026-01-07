@@ -1,6 +1,7 @@
 package com.y5neko.shiroexp.ui.common;
 
 import com.y5neko.shiroexp.ui.tabpane.ExploitTab;
+import com.y5neko.shiroexp.ui.tabpane.FindClassByBombTab;
 import com.y5neko.shiroexp.ui.tabpane.SettingsTab;
 import com.y5neko.shiroexp.ui.tabpane.Shiro550Tab;
 import com.y5neko.shiroexp.ui.tabpane.Shiro721Tab;
@@ -26,6 +27,8 @@ public class Center {
         // ==================================================创建标签页========================================================
         TabPane tabPane = new TabPane();
         tabPane.setTabMaxHeight(17);
+        // 使用 CSS 样式减小 Tab 之间的间隔
+        tabPane.setStyle("-fx-tab-min-width: 80px; -fx-tab-max-width: 150px;");
 
         // Shiro550标签页
         Tab shiro550Tab = new Tab("Shiro550");
@@ -34,6 +37,10 @@ public class Center {
         // FindClassByURLDNS标签页
         Tab urlDnsTab = new Tab("FindClassByURLDNS");
         urlDnsTab.setContent(new URLDNSTab().getURLDNSTab());
+
+        // FindClassByBomb标签页
+        Tab bombTab = new Tab("FindClassByBomb");
+        bombTab.setContent(new FindClassByBombTab().getFindClassByBombTab());
 
         // Shiro721标签页
         Tab shiro721Tab = new Tab("Shiro721");
@@ -48,7 +55,7 @@ public class Center {
         settingsTab.setContent(new SettingsTab().getSettingsTab());
 
         // 添加到 TabPane
-        tabPane.getTabs().addAll(shiro550Tab, urlDnsTab, shiro721Tab, exploitTab, settingsTab);
+        tabPane.getTabs().addAll(shiro550Tab, urlDnsTab, bombTab, shiro721Tab, exploitTab, settingsTab);
         // 禁止关闭标签
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         // 设置默认选中第一个标签页
