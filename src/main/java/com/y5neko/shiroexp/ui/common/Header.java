@@ -157,6 +157,7 @@ public class Header {
                 "- Shiro550\n" +
                 "- Shiro721\n" +
                 "- URLDNS依赖探测\n" +
+                "- FindClassByBomb类探测\n" +
                 "- 利用/回显链爆破\n" +
                 "- 命令执行\n" +
                 "- 内存马注入/自定义内存马\n" +
@@ -179,7 +180,7 @@ public class Header {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("检查更新");
         alert.setHeaderText(null);
-        alert.setContentText("当前已是最新版本 v0.2");
+        alert.setContentText("当前版本: " + Copyright.version + "\n\n已是最新版本");
         alert.showAndWait();
     }
 }
