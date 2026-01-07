@@ -129,7 +129,7 @@ public class Shiro721Tab {
         keywordTextField = new TextField("rememberMe");
         keywordTextField.setPrefWidth(100);
 
-        Button testCookieButton = new Button("测试 Cookie");
+        Button testCookieButton = new Button("测试 rememberMe");
         testCookieButton.setOnAction(event -> handleTestCookie());
 
         box.getChildren().addAll(cookieLabel, cookieTextField, keywordLabel, keywordTextField, testCookieButton);

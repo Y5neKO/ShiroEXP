@@ -136,7 +136,16 @@ public class BruteKey {
             }
 
             // 先判断是否存在shiro框架
-            if (Objects.requireNonNull(response_123.getHeaders().get("Set-Cookie")).contains(rememberMeString) && !checkFlag) {
+            // 检查所有 Set-Cookie 头中是否包含 rememberMe 关键字
+            boolean hasRememberMe = false;
+            for (String setCookie : response_123.getHeaders().values("Set-Cookie")) {
+                if (setCookie.contains(rememberMeString)) {
+                    hasRememberMe = true;
+                    break;
+                }
+            }
+
+            if (hasRememberMe && !checkFlag) {
                 System.out.println(Log.buffer_logging("INFO", "存在shiro框架"));
                 if (globalComponents.logArea!= null) {
                     Platform.runLater(() -> {
@@ -144,7 +153,7 @@ public class BruteKey {
                     });
                     checkFlag = true;
                 }
-            } else if (!Objects.requireNonNull(response_123.getHeaders().get("Set-Cookie")).contains(rememberMeString) && !checkFlag){
+            } else if (!hasRememberMe && !checkFlag){
                 System.out.println(Log.buffer_logging("INFO", "不存在shiro框架"));
                 if (globalComponents.logArea!= null) {
                     Platform.runLater(() -> {
