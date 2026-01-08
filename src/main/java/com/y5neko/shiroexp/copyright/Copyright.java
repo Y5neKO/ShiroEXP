@@ -3,7 +3,7 @@ package com.y5neko.shiroexp.copyright;
 import com.y5neko.shiroexp.misc.Tools;
 
 public class Copyright {
-    public static final String version = "2.0";
+    public static final String version = "2.1";
 
      public static String logo = "\n" +
             "   _____    __      _                    ______   _  __    ____ \n" +

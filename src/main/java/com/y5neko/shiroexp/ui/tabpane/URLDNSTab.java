@@ -280,9 +280,24 @@ public class URLDNSTab {
                             classesToDetect.add(selectedClass);
                         }
 
-                        // 统计类名出现次数，用于处理重名
-                        final java.util.Map<String, Integer> classNameCount = new java.util.HashMap<>();
+                        // 预先计算所有类名的后缀映射（基于整个列表的顺序）
+                        final java.util.List<String> fullList = AllList.getAllUrlDnsClasses();
                         final java.util.Map<String, String> classNameToIndex = new java.util.HashMap<>();
+                        final java.util.Map<String, Integer> classNameCount = new java.util.HashMap<>();
+
+                        // 遍历整个列表，预先计算每个类应该使用的后缀
+                        for (String clazz : fullList) {
+                            String simpleClassName = clazz.substring(clazz.lastIndexOf('.') + 1);
+                            int count = classNameCount.getOrDefault(simpleClassName, 0) + 1;
+                            classNameCount.put(simpleClassName, count);
+
+                            // 如果是第2次及以后出现，添加数字后缀
+                            if (count > 1) {
+                                classNameToIndex.put(clazz, simpleClassName + count);
+                            } else {
+                                classNameToIndex.put(clazz, simpleClassName);
+                            }
+                        }
 
                         // 遍历探测每个类
                         final String finalDnslogDomain = dnslogDomain;
@@ -296,19 +311,8 @@ public class URLDNSTab {
                                 // 提取类名（不含包名）作为 DNS 标识
                                 String simpleClassName = clazz.substring(clazz.lastIndexOf('.') + 1);
 
-                                // 处理重名：统计该类名出现的次数
-                                synchronized (classNameCount) {
-                                    int count = classNameCount.getOrDefault(simpleClassName, 0) + 1;
-                                    classNameCount.put(simpleClassName, count);
-
-                                    // 如果是第2次及以后出现，添加数字后缀
-                                    if (count > 1) {
-                                        simpleClassName = simpleClassName + count;
-                                        classNameToIndex.put(clazz, simpleClassName);
-                                    } else {
-                                        classNameToIndex.put(clazz, simpleClassName);
-                                    }
-                                }
+                                // 从预先计算的映射中获取该类应该使用的后缀
+                                simpleClassName = classNameToIndex.getOrDefault(clazz, simpleClassName);
 
                                 // 创建最终副本供lambda使用
                                 final String finalSimpleClassName = simpleClassName;
@@ -349,7 +353,7 @@ public class URLDNSTab {
                                 }
 
                                 Platform.runLater(() -> {
-                                    appendLogWithScroll(logTextArea, "   -> DNS记录: " + verifyRandom + "-" + finalSimpleClassName + "." + finalDnslogDomain + "\n");
+                                    appendLogWithScroll(logTextArea, "   -> DNS记录: " + finalSimpleClassName + "-" + verifyRandom + "." + finalDnslogDomain + "\n");
                                 });
 
                                 // 如果是单个类探测，等待并查询 DNS 记录
@@ -375,23 +379,39 @@ public class URLDNSTab {
                             }
                         }
 
-                        // 打印完整类名和 DNS 记录的对应关系
+                        // 打印类名和 DNS 记录的对应关系
                         Platform.runLater(() -> {
                             appendLogWithScroll(logTextArea, "========================================\n");
-                            appendLogWithScroll(logTextArea, "[INFO]批量探测完成！\n");
-                            appendLogWithScroll(logTextArea, "----------\n");
-                            appendLogWithScroll(logTextArea, "[完整类名 → DNS记录] 对应关系：\n");
-                            appendLogWithScroll(logTextArea, "----------\n");
-                            for (java.util.Map.Entry<String, String> entry : classNameToIndex.entrySet()) {
-                                String fullClassName = entry.getKey();
-                                String dnsClassName = entry.getValue();
-                                appendLogWithScroll(logTextArea, fullClassName + "\n");
+                            if (classesToDetect.size() == 1) {
+                                // 单个探测：只显示当前类的对应关系
+                                String clazz = classesToDetect.get(0);
+                                String dnsClassName = classNameToIndex.get(clazz);
+                                appendLogWithScroll(logTextArea, "[INFO]探测完成！\n");
+                                appendLogWithScroll(logTextArea, "----------\n");
+                                appendLogWithScroll(logTextArea, "[完整类名 → DNS记录] 对应关系：\n");
+                                appendLogWithScroll(logTextArea, "----------\n");
+                                appendLogWithScroll(logTextArea, clazz + "\n");
                                 appendLogWithScroll(logTextArea, "  → " + dnsClassName + "\n");
+                                appendLogWithScroll(logTextArea, "----------\n");
+                                appendLogWithScroll(logTextArea, "[提示]请访问 DNSLog 平台查看 DNS 记录\n");
+                                appendLogWithScroll(logTextArea, "[提示]如果看到该 DNS 记录，说明目标存在该类\n");
+                            } else {
+                                // 批量探测：显示所有类的对应关系
+                                appendLogWithScroll(logTextArea, "[INFO]批量探测完成！\n");
+                                appendLogWithScroll(logTextArea, "----------\n");
+                                appendLogWithScroll(logTextArea, "[完整类名 → DNS记录] 对应关系：\n");
+                                appendLogWithScroll(logTextArea, "----------\n");
+                                for (java.util.Map.Entry<String, String> entry : classNameToIndex.entrySet()) {
+                                    String fullClassName = entry.getKey();
+                                    String dnsClassName = entry.getValue();
+                                    appendLogWithScroll(logTextArea, fullClassName + "\n");
+                                    appendLogWithScroll(logTextArea, "  → " + dnsClassName + "\n");
+                                }
+                                appendLogWithScroll(logTextArea, "----------\n");
+                                appendLogWithScroll(logTextArea, "[提示]请访问 DNSLog 平台查看 DNS 记录\n");
+                                appendLogWithScroll(logTextArea, "[提示]如果看到某条 DNS 记录，说明目标存在该类\n");
+                                appendLogWithScroll(logTextArea, "[提示]请复制dnslog完整结果到DNSLog结果解析工具进行解析\n");
                             }
-                            appendLogWithScroll(logTextArea, "----------\n");
-                            appendLogWithScroll(logTextArea, "[提示]请访问 DNSLog 平台查看 DNS 记录\n");
-                            appendLogWithScroll(logTextArea, "[提示]如果看到某条 DNS 记录，说明目标存在该类\n");
-                            appendLogWithScroll(logTextArea, "[提示]请复制dnslog完整结果到DNSLog结果解析工具进行解析\n");
                             appendLogWithScroll(logTextArea, "========================================\n");
                         });
 
