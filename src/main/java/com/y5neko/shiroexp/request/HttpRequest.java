@@ -17,12 +17,12 @@ public class HttpRequest {
     /**
      * 获取响应对象
      * @param targetOBJ 目标请求对象
-     * @param formBody POST请求体
+     * @param requestBody POST请求体 (支持 FormBody 或自定义 RequestBody)
      * @param headers 请求头
      * @param method 请求方法
      * @return 响应对象
      */
-    public static ResponseOBJ httpRequest(TargetOBJ targetOBJ, FormBody formBody, Map<String, String> headers, String method) {
+    public static ResponseOBJ httpRequest(TargetOBJ targetOBJ, RequestBody requestBody, Map<String, String> headers, String method) {
         // 创建OkHttp客户端和requestBuilder
         OkHttpClient client = new OkHttpClient();
         Request.Builder requestBuilder;
@@ -35,7 +35,9 @@ public class HttpRequest {
         if (method.equals("GET")) {
             requestBuilder = new Request.Builder().url(targetOBJ.getUrl());
         } else if (method.equals("POST")) {
-            requestBuilder = new Request.Builder().post(formBody).url(targetOBJ.getUrl());
+            // POST 请求时，如果 requestBody 为 null，使用空的 FormBody
+            RequestBody actualBody = requestBody != null ? requestBody : new FormBody.Builder().build();
+            requestBuilder = new Request.Builder().post(actualBody).url(targetOBJ.getUrl());
         } else {
             requestBuilder = new Request.Builder().url(targetOBJ.getUrl());
         }
@@ -59,12 +61,12 @@ public class HttpRequest {
     /**
      * 简单HTTP请求
      * @param url 目标地址
-     * @param formBody POST请求体
+     * @param requestBody POST请求体 (支持 FormBody 或自定义 RequestBody)
      * @param headers 请求头
      * @param method 请求方法
      * @return 响应对象
      */
-    public static ResponseOBJ httpRequest_simple(String url, FormBody formBody, Map<String, String> headers, String method) {
+    public static ResponseOBJ httpRequest_simple(String url, RequestBody requestBody, Map<String, String> headers, String method) {
         // 创建OkHttp客户端和requestBuilder
         OkHttpClient client = new OkHttpClient();
         Request.Builder requestBuilder;
@@ -74,7 +76,9 @@ public class HttpRequest {
         if (method.equals("GET")) {
             requestBuilder = new Request.Builder().url(url);
         } else if (method.equals("POST")) {
-            requestBuilder = new Request.Builder().post(formBody).url(url);
+            // POST 请求时，如果 requestBody 为 null，使用空的 FormBody
+            RequestBody actualBody = requestBody != null ? requestBody : new FormBody.Builder().build();
+            requestBuilder = new Request.Builder().post(actualBody).url(url);
         } else {
             requestBuilder = new Request.Builder().url(url);
         }

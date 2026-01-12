@@ -31,7 +31,7 @@ public class CommandExcute {
             headers.put("Cookie", targetOBJ.getRememberMeFlag() + "=" + payload);
             headers.put("Authorization", "Basic " + command);
 
-            ResponseOBJ responseOBJ = HttpRequest.httpRequest(targetOBJ, null, headers, "GET");
+            ResponseOBJ responseOBJ = HttpRequest.httpRequest(targetOBJ, null, headers, targetOBJ.getRequestType());
 
             // 解码响应（优先使用UTF-8）
             byte[] responseBytes = Base64.getDecoder().decode(Tools.extractStrings(Tools.bytesToString(responseOBJ.getResponse())));
@@ -65,7 +65,7 @@ public class CommandExcute {
             headers.put("Cookie", targetOBJ.getRememberMeFlag() + "=" + payload);
             headers.put("Authorization", "Basic " + command);
 
-            ResponseOBJ responseOBJ = HttpRequest.httpRequest(targetOBJ, null, headers, "GET");
+            ResponseOBJ responseOBJ = HttpRequest.httpRequest(targetOBJ, null, headers, targetOBJ.getRequestType());
 
             // 解码响应（优先使用UTF-8）
             byte[] responseBytes = Base64.getDecoder().decode(Tools.extractStrings(Tools.bytesToString(responseOBJ.getResponse())));

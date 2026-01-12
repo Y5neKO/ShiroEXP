@@ -458,6 +458,21 @@ public class FindClassByBombTab {
      * @param cookie 额外的Cookie
      */
     public void updateFromShiro550(String targetUrl, String key, String rememberMeFlag, String cryptType, String requestType, String cookie) {
+        updateFromShiro550(targetUrl, key, rememberMeFlag, cryptType, requestType, cookie, null, null);
+    }
+
+    /**
+     * 从 Shiro550 Tab 更新配置（公共方法，包含所有高级配置）
+     * @param targetUrl 目标地址
+     * @param key RememberMe Key
+     * @param rememberMeFlag RememberMe Cookie名称
+     * @param cryptType 加密模式
+     * @param requestType 请求方式
+     * @param cookie 额外的Cookie
+     * @param contentType Content-Type值
+     * @param requestBody 请求体值
+     */
+    public void updateFromShiro550(String targetUrl, String key, String rememberMeFlag, String cryptType, String requestType, String cookie, String contentType, String requestBody) {
         if (targetUrlTextField != null && !targetUrl.trim().isEmpty()) {
             targetUrlTextField.setText(targetUrl);
         }
@@ -477,6 +492,14 @@ public class FindClassByBombTab {
         }
         if (cookieTextField != null && cookie != null && !cookie.trim().isEmpty()) {
             cookieTextField.setText(cookie);
+        }
+        // 同步 Content-Type
+        if (contentTypeComboBox != null && contentType != null && !contentType.trim().isEmpty()) {
+            contentTypeComboBox.setValue(contentType);
+        }
+        // 同步请求体
+        if (requestBodyTextField != null && requestBody != null && !requestBody.trim().isEmpty()) {
+            requestBodyTextField.setText(requestBody);
         }
     }
 
@@ -526,6 +549,25 @@ public class FindClassByBombTab {
         if (instance != null) {
             javafx.application.Platform.runLater(() -> {
                 instance.updateFromShiro550(targetUrl, key, rememberMeFlag, cryptType, requestType, cookie);
+            });
+        }
+    }
+
+    /**
+     * 静态方法：更新当前实例的配置（包含所有参数、Content-Type 和请求体）
+     * @param targetUrl 目标地址
+     * @param key RememberMe Key
+     * @param rememberMeFlag RememberMe Cookie名称
+     * @param cryptType 加密模式
+     * @param requestType 请求方式
+     * @param cookie 额外的Cookie
+     * @param contentType Content-Type值
+     * @param requestBody 请求体值
+     */
+    public static void updateFromShiro550Static(String targetUrl, String key, String rememberMeFlag, String cryptType, String requestType, String cookie, String contentType, String requestBody) {
+        if (instance != null) {
+            javafx.application.Platform.runLater(() -> {
+                instance.updateFromShiro550(targetUrl, key, rememberMeFlag, cryptType, requestType, cookie, contentType, requestBody);
             });
         }
     }

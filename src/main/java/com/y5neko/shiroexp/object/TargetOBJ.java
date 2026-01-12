@@ -17,6 +17,8 @@ public class TargetOBJ {
     private String gadget;
     private String echo = "AllEcho";
     private String proxy;
+    private String requestBody;  // POST 请求体内容
+    private String contentType;   // Content-Type（如 application/json）
 
     public String getProxy() {
         return proxy;
@@ -100,6 +102,22 @@ public class TargetOBJ {
 
     public void setCryptType(String cryptType) {
         this.cryptType = cryptType;
+    }
+
+    public String getRequestBody() {
+        return requestBody;
+    }
+
+    public void setRequestBody(String requestBody) {
+        this.requestBody = requestBody;
+    }
+
+    public String getContentType() {
+        return contentType;
+    }
+
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
     }
 
     public void resetHeaders(){

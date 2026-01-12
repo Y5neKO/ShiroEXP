@@ -261,6 +261,9 @@ public class URLDNSTab {
                         final String selectedCryptType = cryptTypeComboBox.getValue();
                         // 获取请求方式选择
                         final String selectedRequestType = requestTypeComboBox.getValue();
+                        // 获取 Content-Type 和请求体（用于 POST 请求）
+                        final String selectedContentType = contentTypeComboBox != null ? contentTypeComboBox.getValue() : null;
+                        final String selectedRequestBody = requestBodyTextField != null ? requestBodyTextField.getText().trim() : null;
 
                         // 创建目标对象
                         TargetOBJ targetOBJ = new TargetOBJ(targetUrlTextField.getText().trim());
@@ -277,8 +280,8 @@ public class URLDNSTab {
                         }
 
                         // 应用 Content-Type
-                        if (contentTypeComboBox != null && contentTypeComboBox.getValue() != null) {
-                            headers.put("Content-Type", contentTypeComboBox.getValue());
+                        if (selectedContentType != null) {
+                            headers.put("Content-Type", selectedContentType);
                         }
 
                         if (!headers.isEmpty()) {
@@ -367,16 +370,27 @@ public class URLDNSTab {
                                 boolean tryCBC = "爆破所有".equals(selectedCryptType) || "CBC".equals(selectedCryptType);
                                 boolean tryGCM = "爆破所有".equals(selectedCryptType) || "GCM".equals(selectedCryptType);
 
+                                // 创建请求体（根据用户选择）
+                                okhttp3.RequestBody requestPayload = createRequestBody(selectedContentType, selectedRequestBody);
+
+                                // 提取用户 Cookie（避免在 mergeHeaders 中重复合并）
+                                String userCookie = null;
+                                if (targetOBJ.getHeaders() != null && targetOBJ.getHeaders().containsKey("Cookie")) {
+                                    userCookie = targetOBJ.getHeaders().get("Cookie");
+                                }
+
                                 // 发送 CBC 模式 payload
                                 if (tryCBC) {
                                     String payload_cbc = Tools.CBC_Encrypt(targetOBJ.getKey(), payloadBase64);
                                     Map<String, String> headers_cbc = new HashMap<>();
                                     String cookieValue_cbc = targetOBJ.getRememberMeFlag() + "=" + payload_cbc;
-                                    if (targetOBJ.getHeaders() != null && targetOBJ.getHeaders().containsKey("Cookie")) {
-                                        cookieValue_cbc = targetOBJ.getHeaders().get("Cookie") + "; " + cookieValue_cbc;
+                                    if (userCookie != null) {
+                                        cookieValue_cbc = userCookie + "; " + cookieValue_cbc;
                                     }
                                     headers_cbc.put("Cookie", cookieValue_cbc);
-                                    HttpRequest.httpRequest(targetOBJ, new FormBody.Builder().build(), headers_cbc, targetOBJ.getRequestType());
+                                    // 清空 targetOBJ 的 headers，避免 Cookie 重复合并
+                                    targetOBJ.resetHeaders();
+                                    HttpRequest.httpRequest(targetOBJ, requestPayload, headers_cbc, targetOBJ.getRequestType());
                                 }
 
                                 // 发送 GCM 模式 payload
@@ -384,11 +398,13 @@ public class URLDNSTab {
                                     String payload_gcm = Tools.GCM_Encrypt(targetOBJ.getKey(), payloadBase64);
                                     Map<String, String> headers_gcm = new HashMap<>();
                                     String cookieValue_gcm = targetOBJ.getRememberMeFlag() + "=" + payload_gcm;
-                                    if (targetOBJ.getHeaders() != null && targetOBJ.getHeaders().containsKey("Cookie")) {
-                                        cookieValue_gcm = targetOBJ.getHeaders().get("Cookie") + "; " + cookieValue_gcm;
+                                    if (userCookie != null) {
+                                        cookieValue_gcm = userCookie + "; " + cookieValue_gcm;
                                     }
                                     headers_gcm.put("Cookie", cookieValue_gcm);
-                                    HttpRequest.httpRequest(targetOBJ, new FormBody.Builder().build(), headers_gcm, targetOBJ.getRequestType());
+                                    // 清空 targetOBJ 的 headers，避免 Cookie 重复合并
+                                    targetOBJ.resetHeaders();
+                                    HttpRequest.httpRequest(targetOBJ, requestPayload, headers_gcm, targetOBJ.getRequestType());
                                 }
 
                                 Platform.runLater(() -> {
@@ -507,6 +523,21 @@ public class URLDNSTab {
      * @param cookie Cookie值
      */
     public void updateFromShiro550(String targetUrl, String key, String rememberMeFlag, String cryptType, String requestType, String cookie) {
+        updateFromShiro550(targetUrl, key, rememberMeFlag, cryptType, requestType, cookie, null, null);
+    }
+
+    /**
+     * 从 Shiro550 Tab 更新配置（公共方法，包含所有参数、Content-Type 和请求体）
+     * @param targetUrl 目标地址
+     * @param key RememberMe Key
+     * @param rememberMeFlag RememberMe Cookie名称
+     * @param cryptType 加密模式
+     * @param requestType 请求方式
+     * @param cookie Cookie值
+     * @param contentType Content-Type值
+     * @param requestBody 请求体值
+     */
+    public void updateFromShiro550(String targetUrl, String key, String rememberMeFlag, String cryptType, String requestType, String cookie, String contentType, String requestBody) {
         if (targetUrlTextField != null && !targetUrl.trim().isEmpty()) {
             targetUrlTextField.setText(targetUrl);
         }
@@ -525,9 +556,17 @@ public class URLDNSTab {
         if (cookieTextField != null && cookie != null && !cookie.trim().isEmpty()) {
             cookieTextField.setText(cookie);
         }
-        // 同步 Content-Type（使用默认值，因为 URLDNS 探测通常不需要特殊 Content-Type）
+        // 同步 Content-Type（优先使用传入值，否则使用默认值）
         if (contentTypeComboBox != null) {
-            contentTypeComboBox.setValue("application/x-www-form-urlencoded");
+            if (contentType != null && !contentType.trim().isEmpty()) {
+                contentTypeComboBox.setValue(contentType);
+            } else {
+                contentTypeComboBox.setValue("application/x-www-form-urlencoded");
+            }
+        }
+        // 同步请求体
+        if (requestBodyTextField != null && requestBody != null && !requestBody.trim().isEmpty()) {
+            requestBodyTextField.setText(requestBody);
         }
     }
 
@@ -574,9 +613,24 @@ public class URLDNSTab {
      * @param cookie Cookie值
      */
     public static void updateFromShiro550Static(String targetUrl, String key, String rememberMeFlag, String cryptType, String requestType, String cookie) {
+        updateFromShiro550Static(targetUrl, key, rememberMeFlag, cryptType, requestType, cookie, null, null);
+    }
+
+    /**
+     * 静态方法：更新当前实例的配置（包含所有参数、Cookie、Content-Type 和请求体）
+     * @param targetUrl 目标地址
+     * @param key RememberMe Key
+     * @param rememberMeFlag RememberMe Cookie名称
+     * @param cryptType 加密模式
+     * @param requestType 请求方式
+     * @param cookie Cookie值
+     * @param contentType Content-Type值
+     * @param requestBody 请求体值
+     */
+    public static void updateFromShiro550Static(String targetUrl, String key, String rememberMeFlag, String cryptType, String requestType, String cookie, String contentType, String requestBody) {
         if (instance != null) {
             javafx.application.Platform.runLater(() -> {
-                instance.updateFromShiro550(targetUrl, key, rememberMeFlag, cryptType, requestType, cookie);
+                instance.updateFromShiro550(targetUrl, key, rememberMeFlag, cryptType, requestType, cookie, contentType, requestBody);
             });
         }
     }
@@ -641,6 +695,23 @@ public class URLDNSTab {
                 }
             }
         });
+    }
+
+    /**
+     * 根据 Content-Type 和请求体创建 RequestBody
+     * @param contentType Content-Type
+     * @param requestBody 请求体内容
+     * @return RequestBody 对象
+     */
+    private okhttp3.RequestBody createRequestBody(String contentType, String requestBody) {
+        if (requestBody != null && !requestBody.isEmpty()) {
+            // 用户提供了请求体，使用指定的 Content-Type
+            String mediaType = contentType != null ? contentType : "text/plain";
+            return okhttp3.RequestBody.create(okhttp3.MediaType.parse(mediaType), requestBody);
+        } else {
+            // 没有请求体，使用空的 FormBody（默认 application/x-www-form-urlencoded）
+            return new okhttp3.FormBody.Builder().build();
+        }
     }
 
     /**

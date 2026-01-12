@@ -12,6 +12,9 @@ import com.y5neko.shiroexp.ui.tabpane.URLDNSTab;
 import javafx.application.Platform;
 import javafx.scene.control.TextArea;
 
+import okhttp3.FormBody;
+import okhttp3.RequestBody;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -80,6 +83,12 @@ public class BruteKey {
 
         boolean checkFlag = false;
 
+        // 获取请求方式（从 UI 获取，默认 GET）
+        String requestType = globalComponents.requestTypeComboBox != null ? globalComponents.requestTypeComboBox.getValue() : "GET";
+        // 获取 Content-Type 和请求体
+        String contentType = globalComponents.contentTypeField != null ? globalComponents.contentTypeField.getValue() : null;
+        String requestBody = globalComponents.requestBodyField != null ? globalComponents.requestBodyField.getText().trim() : null;
+
         // 遍历key字典进行爆破
         for (String s : keys) {
 
@@ -114,9 +123,12 @@ public class BruteKey {
             }
 
             // 构造请求进行对比
+            // 创建请求体（根据用户配置）
+            RequestBody httpRequestBody = createRequestBody(contentType, requestBody);
+
             Map<String, String> headers_123 = new HashMap<>();
             headers_123.put("Cookie", rememberMeString + "=" + "123");
-            ResponseOBJ response_123 = HttpRequest.httpRequest(url, null, headers_123, "GET");
+            ResponseOBJ response_123 = HttpRequest.httpRequest(url, httpRequestBody, headers_123, requestType);
 
             Map<String, String> headers_cbc = null;
             ResponseOBJ response_cbc = null;
@@ -124,7 +136,7 @@ public class BruteKey {
             if (tryCBC && payload_cbc != null) {
                 headers_cbc = new HashMap<>();
                 headers_cbc.put("Cookie", payload_cbc);
-                response_cbc = HttpRequest.httpRequest(url, null, headers_cbc, "GET");
+                response_cbc = HttpRequest.httpRequest(url, httpRequestBody, headers_cbc, requestType);
             }
 
             Map<String, String> headers_gcm = null;
@@ -133,7 +145,7 @@ public class BruteKey {
             if (tryGCM && payload_gcm != null) {
                 headers_gcm = new HashMap<>();
                 headers_gcm.put("Cookie", payload_gcm);
-                response_gcm = HttpRequest.httpRequest(url, null, headers_gcm, "GET");
+                response_gcm = HttpRequest.httpRequest(url, httpRequestBody, headers_gcm, requestType);
             }
 
             // 先判断是否存在shiro框架
@@ -202,8 +214,7 @@ public class BruteKey {
             }
         }
 
-        // 获取请求参数
-        String requestType = globalComponents.requestTypeComboBox != null ? globalComponents.requestTypeComboBox.getValue() : "GET";
+        // 获取请求参数（requestType、contentType、requestBody 已在方法开头定义）
         String cookie = globalComponents.cookieField != null ? globalComponents.cookieField.getText() : null;
 
         // 处理前端显示
@@ -220,13 +231,30 @@ public class BruteKey {
             });
         }
 
-        // 调用 URLDNS 探测标签页的更新方法（包含加密模式、请求方式和Cookie）
-        URLDNSTab.updateFromShiro550Static(url.getUrl(), keyInfoObj.getKey(), rememberMeString, keyInfoObj.getType(), requestType, cookie);
+        // 调用 URLDNS 探测标签页的更新方法（包含加密模式、请求方式、Cookie、Content-Type 和请求体）
+        URLDNSTab.updateFromShiro550Static(url.getUrl(), keyInfoObj.getKey(), rememberMeString, keyInfoObj.getType(), requestType, cookie, contentType, requestBody);
 
-        // 调用 FindClassByBomb 探测标签页的更新方法（包含加密模式、请求方式和Cookie）
-        FindClassByBombTab.updateFromShiro550Static(url.getUrl(), keyInfoObj.getKey(), rememberMeString, keyInfoObj.getType(), requestType, cookie);
+        // 调用 FindClassByBomb 探测标签页的更新方法（包含加密模式、请求方式、Cookie、Content-Type 和请求体）
+        FindClassByBombTab.updateFromShiro550Static(url.getUrl(), keyInfoObj.getKey(), rememberMeString, keyInfoObj.getType(), requestType, cookie, contentType, requestBody);
 
         return keyInfoObj;
+    }
+
+    /**
+     * 根据 Content-Type 和请求体创建 RequestBody
+     * @param contentType Content-Type
+     * @param requestBody 请求体内容
+     * @return RequestBody 对象
+     */
+    private static RequestBody createRequestBody(String contentType, String requestBody) {
+        if (requestBody != null && !requestBody.isEmpty()) {
+            // 用户提供了请求体，使用指定的 Content-Type
+            String mediaType = contentType != null ? contentType : "text/plain";
+            return RequestBody.create(okhttp3.MediaType.parse(mediaType), requestBody);
+        } else {
+            // 没有请求体，使用空的 FormBody（默认 application/x-www-form-urlencoded）
+            return new FormBody.Builder().build();
+        }
     }
 
     public static void main(String[] args) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
