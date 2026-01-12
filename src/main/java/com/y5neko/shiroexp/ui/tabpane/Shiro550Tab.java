@@ -316,6 +316,15 @@ public class Shiro550Tab {
                         // 应用高级配置（Cookie）
                         applyAdvancedConfig(targetOBJ, cookieTextField);
 
+                        // 设置请求方式、Content-Type 和请求体
+                        targetOBJ.setRequestType(requestTypeComboBox.getValue());
+                        if (contentTypeComboBox != null && contentTypeComboBox.getValue() != null) {
+                            targetOBJ.setContentType(contentTypeComboBox.getValue());
+                        }
+                        if (requestBodyTextField != null && !requestBodyTextField.getText().trim().isEmpty()) {
+                            targetOBJ.setRequestBody(requestBodyTextField.getText().trim());
+                        }
+
                         // 执行回显链检测（带进度回调）
                         final TextArea logRef = logTextArea;
                         java.util.List<String> validGadgets = BruteGadget.bruteGadgetCustom(targetOBJ, targetOBJ.getKey(), gadgetsToTest, echosToTest, new BruteGadget.ProgressCallback() {
