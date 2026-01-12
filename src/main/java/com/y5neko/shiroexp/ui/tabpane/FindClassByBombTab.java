@@ -37,6 +37,8 @@ public class FindClassByBombTab {
     private TextField rememberMeTextField;
     private TextField rememberMeFlagTextField;
     private TextField cookieTextField; // Cookie 字段
+    private ComboBox<String> contentTypeComboBox; // Content-Type 下拉框
+    private TextField requestBodyTextField; // 请求体输入框
     private TextField classFilterTextField; // 探测类过滤输入框
     private ComboBox<String> cryptTypeComboBox;
     private ComboBox<String> classComboBox; // 探测类下拉列表
@@ -157,6 +159,32 @@ public class FindClassByBombTab {
 
         cookieBox.getChildren().addAll(cookieLabel, cookieTextField);
         advancedConfigContent.getChildren().add(cookieBox);
+
+        // Content-Type 和请求体配置（同一行）
+        HBox contentTypeAndBodyBox = new HBox();
+        contentTypeAndBodyBox.setAlignment(Pos.CENTER);
+        contentTypeAndBodyBox.setSpacing(10);
+
+        Label contentTypeLabel = new Label("Content-Type: ");
+        ObservableList<String> contentTypes = FXCollections.observableArrayList(
+            "application/x-www-form-urlencoded",
+            "application/json",
+            "multipart/form-data",
+            "text/plain",
+            "application/xml"
+        );
+        contentTypeComboBox = new ComboBox<>(contentTypes);
+        contentTypeComboBox.setValue("application/x-www-form-urlencoded");
+        HBox.setHgrow(contentTypeComboBox, javafx.scene.layout.Priority.ALWAYS);
+
+        Label requestBodyLabel = new Label("请求体: ");
+        requestBodyTextField = new TextField();
+        requestBodyTextField.setPromptText("POST 时生效 (例: {\"key\":\"value\"})");
+        HBox.setHgrow(requestBodyTextField, javafx.scene.layout.Priority.ALWAYS);
+
+        contentTypeAndBodyBox.getChildren().addAll(contentTypeLabel, contentTypeComboBox, requestBodyLabel, requestBodyTextField);
+        advancedConfigContent.getChildren().add(contentTypeAndBodyBox);
+
         advancedConfigPane.setContent(advancedConfigContent);
 
         // ========================== 第五行：操作按钮 ==========================
@@ -344,13 +372,34 @@ public class FindClassByBombTab {
         }
         headers.put("Cookie", cookieValue);
 
+        // 应用 Content-Type
+        if (contentTypeComboBox != null && contentTypeComboBox.getValue() != null) {
+            headers.put("Content-Type", contentTypeComboBox.getValue());
+        }
+
         okhttp3.Request.Builder requestBuilder;
         String requestType = requestTypeComboBox.getValue();
 
+        // 获取请求体
+        String requestBody = null;
+        if (requestBodyTextField != null && !requestBodyTextField.getText().trim().isEmpty()) {
+            requestBody = requestBodyTextField.getText().trim();
+        }
+
         if ("POST".equals(requestType)) {
-            okhttp3.FormBody formBody = new okhttp3.FormBody.Builder().build();
+            okhttp3.RequestBody body;
+            if (requestBody != null && !requestBody.isEmpty()) {
+                // 使用用户提供的请求体
+                body = okhttp3.RequestBody.create(
+                    okhttp3.MediaType.parse(contentTypeComboBox != null ? contentTypeComboBox.getValue() : "text/plain"),
+                    requestBody
+                );
+            } else {
+                // 默认空表单
+                body = new okhttp3.FormBody.Builder().build();
+            }
             requestBuilder = new okhttp3.Request.Builder()
-                    .post(formBody)
+                    .post(body)
                     .url(targetOBJ.getUrl());
         } else {
             requestBuilder = new okhttp3.Request.Builder()

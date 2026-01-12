@@ -34,3 +34,4 @@ bin/
 ### Other ###
 .spec-workflow/
 .claude/
+CLAUDE.md

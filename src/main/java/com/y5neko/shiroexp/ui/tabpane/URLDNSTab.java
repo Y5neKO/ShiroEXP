@@ -33,6 +33,8 @@ public class URLDNSTab {
     private static URLDNSTab instance;
 
     private TextField cookieTextField;
+    private ComboBox<String> contentTypeComboBox; // Content-Type 下拉框
+    private TextField requestBodyTextField; // 请求体输入框
     private TextField targetUrlTextField;
     private TextField rememberMeTextField;
     private TextField rememberMeFlagTextField;
@@ -158,6 +160,7 @@ public class URLDNSTab {
         advancedConfigContent.setSpacing(10);
         advancedConfigContent.setPadding(new Insets(10, 0, 10, 0));
 
+        // Cookie 配置
         HBox cookieBox = new HBox();
         cookieBox.setAlignment(Pos.CENTER);
         cookieBox.setSpacing(10);
@@ -169,6 +172,32 @@ public class URLDNSTab {
 
         cookieBox.getChildren().addAll(cookieLabel, cookieTextField);
         advancedConfigContent.getChildren().add(cookieBox);
+
+        // Content-Type 和请求体配置（同一行）
+        HBox contentTypeAndBodyBox = new HBox();
+        contentTypeAndBodyBox.setAlignment(Pos.CENTER);
+        contentTypeAndBodyBox.setSpacing(10);
+
+        Label contentTypeLabel = new Label("Content-Type: ");
+        ObservableList<String> contentTypes = FXCollections.observableArrayList(
+            "application/x-www-form-urlencoded",
+            "application/json",
+            "multipart/form-data",
+            "text/plain",
+            "application/xml"
+        );
+        contentTypeComboBox = new ComboBox<>(contentTypes);
+        contentTypeComboBox.setValue("application/x-www-form-urlencoded");
+        HBox.setHgrow(contentTypeComboBox, javafx.scene.layout.Priority.ALWAYS);
+
+        Label requestBodyLabel = new Label("请求体: ");
+        requestBodyTextField = new TextField();
+        requestBodyTextField.setPromptText("POST 时生效 (例: {\"key\":\"value\"})");
+        HBox.setHgrow(requestBodyTextField, javafx.scene.layout.Priority.ALWAYS);
+
+        contentTypeAndBodyBox.getChildren().addAll(contentTypeLabel, contentTypeComboBox, requestBodyLabel, requestBodyTextField);
+        advancedConfigContent.getChildren().add(contentTypeAndBodyBox);
+
         advancedConfigPane.setContent(advancedConfigContent);
 
         // ========================== 第五行：日志区域 ==========================
@@ -239,10 +268,20 @@ public class URLDNSTab {
                         targetOBJ.setRememberMeFlag(rememberMeFlagTextField.getText().trim());
                         targetOBJ.setRequestType(selectedRequestType);
 
-                        // 应用高级配置（Cookie）
+                        // 应用高级配置
+                        Map<String, String> headers = new HashMap<>();
+
+                        // 应用 Cookie
                         if (cookieTextField != null && !cookieTextField.getText().trim().isEmpty()) {
-                            Map<String, String> headers = new HashMap<>();
                             headers.put("Cookie", cookieTextField.getText().trim());
+                        }
+
+                        // 应用 Content-Type
+                        if (contentTypeComboBox != null && contentTypeComboBox.getValue() != null) {
+                            headers.put("Content-Type", contentTypeComboBox.getValue());
+                        }
+
+                        if (!headers.isEmpty()) {
                             targetOBJ.setHeaders(headers);
                         }
 
@@ -485,6 +524,10 @@ public class URLDNSTab {
         }
         if (cookieTextField != null && cookie != null && !cookie.trim().isEmpty()) {
             cookieTextField.setText(cookie);
+        }
+        // 同步 Content-Type（使用默认值，因为 URLDNS 探测通常不需要特殊 Content-Type）
+        if (contentTypeComboBox != null) {
+            contentTypeComboBox.setValue("application/x-www-form-urlencoded");
         }
     }
 

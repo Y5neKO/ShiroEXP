@@ -25,6 +25,8 @@ public class Shiro550Tab {
     public ComboBox<String> echoGadgetsComboBox;
     public ComboBox<String> cryptTypeComboBox;
     private TextField cookieTextField;
+    private ComboBox<String> contentTypeComboBox;
+    private TextField requestBodyTextField;
 
     // 停止爆破标志和当前Task
     private volatile boolean stopBruteForce = false;
@@ -130,8 +132,33 @@ public class Shiro550Tab {
         HBox.setHgrow(cookieTextField, javafx.scene.layout.Priority.ALWAYS);
 
         cookieBox.getChildren().addAll(cookieLabel, cookieTextField);
-
         advancedConfigContent.getChildren().add(cookieBox);
+
+        // Content-Type 和请求体配置（同一行）
+        HBox contentTypeAndBodyBox = new HBox();
+        contentTypeAndBodyBox.setAlignment(Pos.CENTER);
+        contentTypeAndBodyBox.setSpacing(10);
+
+        Label contentTypeLabel = new Label("Content-Type: ");
+        ObservableList<String> contentTypes = FXCollections.observableArrayList(
+            "application/x-www-form-urlencoded",
+            "application/json",
+            "multipart/form-data",
+            "text/plain",
+            "application/xml"
+        );
+        contentTypeComboBox = new ComboBox<>(contentTypes);
+        contentTypeComboBox.setValue("application/x-www-form-urlencoded");
+        HBox.setHgrow(contentTypeComboBox, javafx.scene.layout.Priority.ALWAYS);
+
+        Label requestBodyLabel = new Label("请求体: ");
+        requestBodyTextField = new TextField();
+        requestBodyTextField.setPromptText("POST 时生效 (例: {\"key\":\"value\"})");
+        HBox.setHgrow(requestBodyTextField, javafx.scene.layout.Priority.ALWAYS);
+
+        contentTypeAndBodyBox.getChildren().addAll(contentTypeLabel, contentTypeComboBox, requestBodyLabel, requestBodyTextField);
+        advancedConfigContent.getChildren().add(contentTypeAndBodyBox);
+
         advancedConfigPane.setContent(advancedConfigContent);
 
         // ================================第五行日志==================================
@@ -182,7 +209,8 @@ public class Shiro550Tab {
             // 传递需要后续操作的组件到POJO类
             final GlobalComponents globalComponents = new GlobalComponents(
                     rememberMeValueTextField, exploitChainComboBox,
-                    echoGadgetsComboBox, logTextArea, cryptTypeComboBox, requestTypeComboBox, checkRememberMeButton, cookieTextField, stopBruteForce
+                    echoGadgetsComboBox, logTextArea, cryptTypeComboBox, requestTypeComboBox,
+                    checkRememberMeButton, cookieTextField, contentTypeComboBox, requestBodyTextField, stopBruteForce
             );
 
             // 添加到线程池中执行，防止阻塞UI线程
@@ -345,6 +373,12 @@ public class Shiro550Tab {
                                     if (cookieTextField != null && !cookieTextField.getText().trim().isEmpty()) {
                                         config.setCookie(cookieTextField.getText().trim());
                                     }
+                                    if (contentTypeComboBox != null && contentTypeComboBox.getValue() != null) {
+                                        config.setContentType(contentTypeComboBox.getValue());
+                                    }
+                                    if (requestBodyTextField != null && !requestBodyTextField.getText().trim().isEmpty()) {
+                                        config.setRequestBody(requestBodyTextField.getText().trim());
+                                    }
 
                                     // 提示用户
                                     appendLogWithScroll(logTextArea, "\n");
@@ -403,12 +437,32 @@ public class Shiro550Tab {
      * @param cookie Cookie 文本框
      */
     private void applyAdvancedConfig(TargetOBJ targetOBJ, TextField cookie) {
+        Map<String, String> headers = new HashMap<>();
+
         // 应用 Cookie
         if (cookie != null && !cookie.getText().trim().isEmpty()) {
-            Map<String, String> headers = new HashMap<>();
             headers.put("Cookie", cookie.getText().trim());
+        }
+
+        // 应用 Content-Type
+        if (contentTypeComboBox != null && contentTypeComboBox.getValue() != null) {
+            headers.put("Content-Type", contentTypeComboBox.getValue());
+        }
+
+        if (!headers.isEmpty()) {
             targetOBJ.setHeaders(headers);
         }
+    }
+
+    /**
+     * 获取请求体内容
+     * @return 请求体字符串，如果没有则返回 null
+     */
+    private String getRequestBody() {
+        if (requestBodyTextField != null && !requestBodyTextField.getText().trim().isEmpty()) {
+            return requestBodyTextField.getText().trim();
+        }
+        return null;
     }
 
     public class GlobalComponents {
@@ -420,12 +474,15 @@ public class Shiro550Tab {
         public ComboBox<String> requestTypeComboBox;
         public Button checkRememberMeButton;
         public TextField cookieField;
+        public ComboBox<String> contentTypeField;
+        public TextField requestBodyField;
         public volatile boolean stopFlag;
 
         public GlobalComponents(TextField rememberMeField, ComboBox<String> exploitChainComboBox,
                                 ComboBox<String> echoGadgetsComboBox, TextArea logArea,
                                 ComboBox<String> cryptTypeComboBox, ComboBox<String> requestTypeComboBox,
-                                Button checkRememberMeButton, TextField cookieField, boolean stopFlag) {
+                                Button checkRememberMeButton, TextField cookieField,
+                                ComboBox<String> contentTypeField, TextField requestBodyField, boolean stopFlag) {
             this.rememberMeField = rememberMeField;
             this.exploitChainComboBox = exploitChainComboBox;
             this.echoGadgetsComboBox = echoGadgetsComboBox;
@@ -434,6 +491,8 @@ public class Shiro550Tab {
             this.requestTypeComboBox = requestTypeComboBox;
             this.checkRememberMeButton = checkRememberMeButton;
             this.cookieField = cookieField;
+            this.contentTypeField = contentTypeField;
+            this.requestBodyField = requestBodyField;
             this.stopFlag = stopFlag;
         }
     }
