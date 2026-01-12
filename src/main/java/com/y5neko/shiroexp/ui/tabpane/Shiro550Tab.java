@@ -316,8 +316,9 @@ public class Shiro550Tab {
                         // 应用高级配置（Cookie）
                         applyAdvancedConfig(targetOBJ, cookieTextField);
 
-                        // 设置请求方式、Content-Type 和请求体
+                        // 设置请求方式、Content-Type、请求体和加密方式
                         targetOBJ.setRequestType(requestTypeComboBox.getValue());
+                        targetOBJ.setCryptType(cryptTypeComboBox.getValue());
                         if (contentTypeComboBox != null && contentTypeComboBox.getValue() != null) {
                             targetOBJ.setContentType(contentTypeComboBox.getValue());
                         }

